@@ -102,16 +102,16 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 // Logo
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(kColorPrimary), Color(kColorPrimaryDark)],
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/logo.png'),
+                      fit: BoxFit.cover,
                     ),
-                    boxShadow: [BoxShadow(color: const Color(kColorPrimary).withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 3))],
+                    boxShadow: [BoxShadow(color: const Color(kColorPrimary).withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2))],
                   ),
-                  child: const Center(child: Text('❄️', style: TextStyle(fontSize: 18))),
                 ),
                 const SizedBox(width: 10),
                 Column(
@@ -637,7 +637,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              Container(width: 36, height: 36, decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [Color(kColorPrimary), Color(kColorPrimaryDark)])), child: const Center(child: Text('❄️', style: TextStyle(fontSize: 16)))),
+              Container(width: 36, height: 36, decoration: const BoxDecoration(shape: BoxShape.circle, image: DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover))),
               const SizedBox(width: 10),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('أولاد رزق', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
