@@ -20,3 +20,5 @@ Thumbs.db
 _staging/
 task_env.txt
 task.md
+
+.vercel

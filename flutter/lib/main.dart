@@ -14,6 +14,19 @@ class AwladRizkApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      builder: (context, child) {
+        return Container(
+          color: Colors.black87, // Dark background for the outside area on desktop
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480), // Mobile phone width constraint
+              child: ClipRect(
+                child: child!,
+              ),
+            ),
+          ),
+        );
+      },
       title: 'أولاد رزق للتبريد والتكييف',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
