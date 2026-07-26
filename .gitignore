@@ -1,0 +1,22 @@
+# Flutter
+flutter/build/
+flutter/.dart_tool/
+flutter/.packages
+flutter/.flutter-plugins
+flutter/.flutter-plugins-dependencies
+
+# Node / Next.js  
+backend/node_modules/
+backend/.next/
+backend/.env.local
+backend/.env.*.local
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# Staging files (internal only)
+_staging/
+task_env.txt
+task.md
