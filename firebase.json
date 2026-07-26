@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "awlad-rizk",
     "public": "flutter/build/web",
     "ignore": [
       "firebase.json",
