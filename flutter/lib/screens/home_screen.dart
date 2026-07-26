@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'constants.dart';
-import 'models.dart';
-import 'api_service.dart';
+import '../constants.dart';
+import '../models.dart';
+import '../api_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
