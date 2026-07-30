@@ -270,18 +270,27 @@ class _BookingScreenState extends State<BookingScreen> {
                   children: [
                     Text('عدد المكيفات (الكمية):', style: GoogleFonts.cairo(fontSize: 16)),
                     const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline, color: Color(kColorPrimary)),
-                      onPressed: () {
-                        if (_quantity > 1) setState(() => _quantity--);
-                      },
+                    Container(
+                      decoration: BoxDecoration(color: const Color(kColorPrimary).withOpacity(0.1), shape: BoxShape.circle),
+                      child: IconButton(
+                        icon: const Icon(Icons.remove, color: Color(kColorPrimary)),
+                        onPressed: () {
+                          if (_quantity > 1) setState(() => _quantity--);
+                        },
+                      ),
                     ),
-                    Text('$_quantity', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700)),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline, color: Color(kColorPrimary)),
-                      onPressed: () {
-                        setState(() => _quantity++);
-                      },
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('$_quantity', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700)),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(color: const Color(kColorPrimary).withOpacity(0.1), shape: BoxShape.circle),
+                      child: IconButton(
+                        icon: const Icon(Icons.add, color: Color(kColorPrimary)),
+                        onPressed: () {
+                          setState(() => _quantity++);
+                        },
+                      ),
                     ),
                   ],
                 ),
