@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 import 'screens/home_screen.dart';
 import 'screens/not_implemented_screen.dart';
+import 'screens/services_screen.dart';
 
 void main() {
   runApp(const AwladRizkApp());
@@ -55,10 +56,7 @@ class AwladRizkApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (_) => const HomeScreen(),
-        '/services': (_) => const NotImplementedScreen(
-          title: 'خدماتنا',
-          description: 'صفحة عرض جميع الخدمات مع التصفية حسب التصنيف قيد التطوير.',
-        ),
+        '/services': (_) => const ServicesScreen(),
         '/service_detail': (_) => const NotImplementedScreen(
           title: 'تفاصيل الخدمة',
           description: 'صفحة تفاصيل الخدمة مع السعر والضمان والحجز المباشر قيد التطوير.',

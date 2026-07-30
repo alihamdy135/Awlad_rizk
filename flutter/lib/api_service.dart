@@ -6,9 +6,12 @@ import 'models.dart';
 class ApiService {
   static const _headers = {'Content-Type': 'application/json'};
 
-  static Future<List<ServiceModel>> getServices({bool featured = false}) async {
+  static Future<List<ServiceModel>> getServices({bool featured = false, String? categoryId}) async {
     try {
-      final url = '$kBaseUrl/api/services${featured ? '?featured=true' : ''}';
+      String url = '$kBaseUrl/api/services?';
+      if (featured) url += 'featured=true&';
+      if (categoryId != null && categoryId.isNotEmpty) url += 'category=$categoryId&';
+      
       final response = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -17,7 +20,11 @@ class ApiService {
         }
       }
     } catch (_) {}
-    return _fallbackServices;
+    // Filter fallback data if API fails
+    var results = _fallbackServices;
+    if (featured) results = results.where((s) => s.isFeatured).toList();
+    if (categoryId != null && categoryId.isNotEmpty) results = results.where((s) => s.categoryId == categoryId).toList();
+    return results;
   }
 
   static Future<List<CategoryModel>> getCategories() async {
@@ -61,10 +68,10 @@ class ApiService {
 
   // ─── Fallback Data ────────────────────────────────────────
   static final _fallbackServices = [
-    ServiceModel(id:'1', serviceId:'SRV-001', nameAr:'تنظيف مكيف سبليت', shortDescriptionAr:'تنظيف شامل للوحدة الداخلية والخارجية بمواد متخصصة', basePriceSar:120, priceUnit:'للوحدة', warrantyDays:30, slug:'split-ac-cleaning', isFeatured:true),
-    ServiceModel(id:'2', serviceId:'SRV-002', nameAr:'صيانة وإصلاح مكيفات', shortDescriptionAr:'تشخيص وإصلاح جميع أعطال المكيفات بضمان كامل', basePriceSar:200, priceUnit:'للزيارة', warrantyDays:30, slug:'ac-repair', isFeatured:true),
-    ServiceModel(id:'3', serviceId:'SRV-003', nameAr:'تعبئة فريون', shortDescriptionAr:'إعادة شحن غاز الفريون لتحسين كفاءة التبريد', basePriceSar:150, priceUnit:'للوحدة', warrantyDays:15, slug:'freon-refill', isFeatured:true),
-    ServiceModel(id:'4', serviceId:'SRV-004', nameAr:'لحام نحاس', shortDescriptionAr:'إصلاح التسربات بتقنية اللحام النحاسي الاحترافي', basePriceSar:250, priceUnit:'للتدخل', warrantyDays:30, slug:'copper-welding', isFeatured:false),
+    ServiceModel(id:'1', serviceId:'SRV-001', categoryId:'CAT-01', nameAr:'تنظيف مكيف سبليت', shortDescriptionAr:'تنظيف شامل للوحدة الداخلية والخارجية بمواد متخصصة', basePriceSar:120, priceUnit:'للوحدة', warrantyDays:30, slug:'split-ac-cleaning', isFeatured:true),
+    ServiceModel(id:'2', serviceId:'SRV-002', categoryId:'CAT-02', nameAr:'صيانة وإصلاح مكيفات', shortDescriptionAr:'تشخيص وإصلاح جميع أعطال المكيفات بضمان كامل', basePriceSar:200, priceUnit:'للزيارة', warrantyDays:30, slug:'ac-repair', isFeatured:true),
+    ServiceModel(id:'3', serviceId:'SRV-003', categoryId:'CAT-03', nameAr:'تعبئة فريون', shortDescriptionAr:'إعادة شحن غاز الفريون لتحسين كفاءة التبريد', basePriceSar:150, priceUnit:'للوحدة', warrantyDays:15, slug:'freon-refill', isFeatured:true),
+    ServiceModel(id:'4', serviceId:'SRV-004', categoryId:'CAT-04', nameAr:'لحام نحاس', shortDescriptionAr:'إصلاح التسربات بتقنية اللحام النحاسي الاحترافي', basePriceSar:250, priceUnit:'للتدخل', warrantyDays:30, slug:'copper-welding', isFeatured:false),
   ];
   static final _fallbackCategories = [
     CategoryModel(id:'1', categoryId:'CAT-01', nameAr:'تنظيف', iconName:'🧹'),

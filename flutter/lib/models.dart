@@ -1,6 +1,7 @@
 class ServiceModel {
   final String id;
   final String serviceId;
+  final String categoryId;
   final String nameAr;
   final String shortDescriptionAr;
   final double basePriceSar;
@@ -13,6 +14,7 @@ class ServiceModel {
   ServiceModel({
     required this.id,
     required this.serviceId,
+    required this.categoryId,
     required this.nameAr,
     required this.shortDescriptionAr,
     required this.basePriceSar,
@@ -27,6 +29,7 @@ class ServiceModel {
     return ServiceModel(
       id: json['_id'] ?? '',
       serviceId: json['service_id'] ?? '',
+      categoryId: json['category_id'] ?? '',
       nameAr: json['name_ar'] ?? '',
       shortDescriptionAr: json['short_description_ar'] ?? '',
       basePriceSar: (json['base_price_sar'] ?? 0).toDouble(),
