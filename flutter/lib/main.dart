@@ -4,6 +4,7 @@ import 'constants.dart';
 import 'screens/home_screen.dart';
 import 'screens/not_implemented_screen.dart';
 import 'screens/services_screen.dart';
+import 'screens/service_detail_screen.dart';
 
 void main() {
   runApp(const AwladRizkApp());
@@ -57,10 +58,7 @@ class AwladRizkApp extends StatelessWidget {
       routes: {
         '/': (_) => const HomeScreen(),
         '/services': (_) => const ServicesScreen(),
-        '/service_detail': (_) => const NotImplementedScreen(
-          title: 'تفاصيل الخدمة',
-          description: 'صفحة تفاصيل الخدمة مع السعر والضمان والحجز المباشر قيد التطوير.',
-        ),
+        '/service_detail': (_) => const ServiceDetailScreen(),
         '/booking': (_) => const NotImplementedScreen(
           title: 'نموذج الحجز',
           description: 'نموذج الحجز السريع (الاسم، الجوال، الحي، العنوان، التاريخ، الفترة الزمنية) قيد التطوير. يمكنك التواصل معنا عبر واتساب لحجز موعدك.',
