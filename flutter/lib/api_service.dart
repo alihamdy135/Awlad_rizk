@@ -93,11 +93,11 @@ class ApiService {
     ServiceModel(id:'6', serviceId:'SRV-006', categoryId:'CAT-01', nameAr:'تنظيف داكت سنترال', shortDescriptionAr:'تنظيف مجاري الهواء للمكيفات المركزية', basePriceSar:500, priceUnit:'للوحدة', warrantyDays:30, slug:'duct-cleaning', isFeatured:true),
   ];
   static final _fallbackCategories = [
-    CategoryModel(id:'1', categoryId:'CAT-01', nameAr:'تنظيف', iconName:'🧹'),
-    CategoryModel(id:'2', categoryId:'CAT-02', nameAr:'صيانة', iconName:'🔧'),
-    CategoryModel(id:'3', categoryId:'CAT-03', nameAr:'فريون', iconName:'❄️'),
-    CategoryModel(id:'4', categoryId:'CAT-04', nameAr:'لحام', iconName:'🔥'),
-    CategoryModel(id:'5', categoryId:'CAT-05', nameAr:'عقود', iconName:'📋'),
+    CategoryModel(id:'1', categoryId:'CAT-01', nameAr:'تنظيف', iconName:'cleaning_services'),
+    CategoryModel(id:'2', categoryId:'CAT-02', nameAr:'صيانة', iconName:'build'),
+    CategoryModel(id:'3', categoryId:'CAT-03', nameAr:'تعبئة', iconName:'ac_unit'),
+    CategoryModel(id:'4', categoryId:'CAT-04', nameAr:'لحام', iconName:'local_fire_department'),
+    CategoryModel(id:'5', categoryId:'CAT-05', nameAr:'عقود', iconName:'description'),
   ];
   static final List<TestimonialModel> _fallbackTestimonials = [];
   static final _fallbackFAQs = [

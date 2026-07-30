@@ -228,7 +228,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           elevation: 4,
                           shadowColor: const Color(kColorPrimary).withOpacity(0.5),
                         ),
-                        child: Text('📅 احجز الآن', style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 16)),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.calendar_month, size: 18),
+                            const SizedBox(width: 6),
+                            Text('احجز الآن', style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 16)),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -255,11 +262,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     final rating = snapshot.data?['average_rating'] ?? 4.9;
                     return Row(
                       children: [
-                        _buildHeroStat('+$customers', 'عميل راضٍ'),
+                        _buildHeroStat('+$customers', 'عميل راضٍ', Icons.people),
                         _buildStatDivider(),
-                        _buildHeroStat('$rating★', 'متوسط التقييم'),
+                        _buildHeroStat(rating.toString(), 'متوسط التقييم', Icons.star),
                         _buildStatDivider(),
-                        _buildHeroStat('30', 'يوم ضمان'),
+                        _buildHeroStat('30', 'يوم ضمان', Icons.verified_user),
                       ],
                     );
                   },
@@ -272,11 +279,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeroStat(String num, String label) {
+  Widget _buildHeroStat(String num, String label, IconData icon) {
     return Expanded(
       child: Column(
         children: [
-          Text(num, style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w900, color: const Color(kColorAccent))),
+          Icon(icon, color: const Color(kColorAccent), size: 20),
+          const SizedBox(height: 4),
+          Text(num, style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.w900, color: const Color(kColorAccent))),
           Text(label, style: GoogleFonts.cairo(fontSize: 11, color: Colors.white.withOpacity(0.7))),
         ],
       ),
@@ -290,10 +299,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // ─── Trust Bar ──────────────────────────────────────────────────────
   Widget _buildTrustBar() {
     final items = [
-      ('✅', 'ضمان 30 يوم'),
-      ('💳', 'الدفع بعد الخدمة'),
-      ('👨‍🔧', 'فنيون محترفون'),
-      ('💰', 'أسعار شفافة'),
+      (Icons.verified, 'ضمان 30 يوم'),
+      (Icons.credit_card, 'الدفع بعد الخدمة'),
+      (Icons.engineering, 'فنيون محترفون'),
+      (Icons.attach_money, 'أسعار شفافة'),
     ];
     return Container(
       color: const Color(kColorSecondary),
@@ -306,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(left: 24),
             child: Row(
               children: [
-                Text(item.$1, style: const TextStyle(fontSize: 18)),
+                Icon(item.$1, color: const Color(kColorAccent), size: 18),
                 const SizedBox(width: 8),
                 Text(item.$2, style: GoogleFonts.cairo(color: Colors.white.withOpacity(0.9), fontSize: 14, fontWeight: FontWeight.w500)),
               ],
@@ -315,6 +324,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  IconData _getIconFromName(String name) {
+    switch(name) {
+      case 'cleaning_services': return Icons.cleaning_services;
+      case 'build': return Icons.build;
+      case 'ac_unit': return Icons.ac_unit;
+      case 'local_fire_department': return Icons.local_fire_department;
+      case 'description': return Icons.description;
+      default: return Icons.home_repair_service;
+    }
   }
 
   // ─── Categories ─────────────────────────────────────────────────────
@@ -350,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(cat.iconName, style: const TextStyle(fontSize: 26)),
+                        Icon(_getIconFromName(cat.iconName), color: const Color(kColorPrimary), size: 28),
                         const SizedBox(height: 6),
                         Text(cat.nameAr, style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(kColorSecondary)), textAlign: TextAlign.center),
                       ],
@@ -399,7 +419,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildServiceCard(ServiceModel svc) {
-    final icons = {'تنظيف مكيف سبليت':'🧹','صيانة وإصلاح مكيفات':'🔧','تعبئة فريون':'❄️','لحام نحاس':'🔥','عقد صيانة دورية':'📋','تنظيف داكت سنترال':'🏢'};
+    final icons = {
+      'تنظيف مكيف سبليت': Icons.cleaning_services,
+      'صيانة وإصلاح مكيفات': Icons.build,
+      'تعبئة فريون': Icons.ac_unit,
+      'لحام نحاس': Icons.local_fire_department,
+      'عقد صيانة دورية': Icons.description,
+      'تنظيف داكت سنترال': Icons.business,
+    };
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
@@ -422,11 +449,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
-                  color: const Color(kColorBg),
+                  color: const Color(kColorPrimary).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(kColorBorder)),
+                  border: Border.all(color: const Color(kColorPrimary).withOpacity(0.2)),
                 ),
-                child: Center(child: Text(icons[svc.nameAr] ?? '❄️', style: const TextStyle(fontSize: 30))),
+                child: Center(child: Icon(icons[svc.nameAr] ?? Icons.ac_unit, color: const Color(kColorPrimary), size: 30)),
               ),
               const SizedBox(width: 14),
               // Info
