@@ -14,7 +14,26 @@ export async function GET(request: Request) {
     if (featured === 'true') query.is_featured = true;
     if (category) query.category_id = category;
 
-    const services = await ServiceModel.find(query).sort({ display_order: 1 }).lean();
+    let services = [];
+    if (featured === 'true') {
+      services = await ServiceModel.aggregate([
+        { $match: query },
+        {
+          $lookup: {
+            from: 'bookings',
+            localField: 'service_id',
+            foreignField: 'service_id',
+            as: 'bookings'
+          }
+        },
+        { $addFields: { bookingsCount: { $size: "$bookings" } } },
+        { $sort: { bookingsCount: -1, name_ar: 1 } },
+        { $project: { bookings: 0 } }
+      ]);
+    } else {
+      services = await ServiceModel.find(query).sort({ display_order: 1 }).lean();
+    }
+    
     return NextResponse.json({ success: true, data: services });
   } catch (error) {
     console.error('Services API Error:', error);
