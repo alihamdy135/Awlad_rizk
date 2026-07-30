@@ -63,10 +63,10 @@ class ApiService {
         }
       }
     } catch (_) {}
-    // Fallback if backend is unavailable
+    // Fallback if backend is unavailable (set to 0 to show "Pending")
     return {
-      'total_satisfied_customers': 1205, // Real number if backend fails
-      'average_rating': 4.9,
+      'total_satisfied_customers': 0,
+      'average_rating': 0.0,
     };
   }
 

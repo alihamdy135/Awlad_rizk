@@ -258,13 +258,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 FutureBuilder<Map<String, dynamic>>(
                   future: ApiService.getStats(),
                   builder: (context, snapshot) {
-                    final customers = snapshot.data?['total_satisfied_customers'] ?? 500;
-                    final rating = snapshot.data?['average_rating'] ?? 4.9;
+                    final customers = snapshot.data?['total_satisfied_customers'] ?? 0;
+                    final rating = snapshot.data?['average_rating'] ?? 0.0;
+                    
+                    final customersText = customers > 0 ? '+$customers' : 'قريباً';
+                    final ratingText = rating > 0.0 ? rating.toString() : 'قيد الانتظار';
+
                     return Row(
                       children: [
-                        _buildHeroStat('+$customers', 'عميل راضٍ', Icons.people),
+                        _buildHeroStat(customersText, 'عميل راضٍ', Icons.people, textFontSize: customers > 0 ? 20 : 16),
                         _buildStatDivider(),
-                        _buildHeroStat(rating.toString(), 'متوسط التقييم', Icons.star),
+                        _buildHeroStat(ratingText, 'متوسط التقييم', Icons.star, textFontSize: rating > 0.0 ? 20 : 14),
                         _buildStatDivider(),
                         _buildHeroStat('30', 'يوم ضمان', Icons.verified_user),
                       ],
@@ -279,13 +283,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeroStat(String num, String label, IconData icon) {
+  Widget _buildHeroStat(String num, String label, IconData icon, {double textFontSize = 20}) {
     return Expanded(
       child: Column(
         children: [
           Icon(icon, color: const Color(kColorAccent), size: 20),
           const SizedBox(height: 4),
-          Text(num, style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.w900, color: const Color(kColorAccent))),
+          Text(num, style: GoogleFonts.cairo(fontSize: textFontSize, fontWeight: FontWeight.w900, color: const Color(kColorAccent))),
           Text(label, style: GoogleFonts.cairo(fontSize: 11, color: Colors.white.withOpacity(0.7))),
         ],
       ),
