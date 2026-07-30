@@ -6,6 +6,9 @@ import 'screens/not_implemented_screen.dart';
 import 'screens/services_screen.dart';
 import 'screens/service_detail_screen.dart';
 import 'screens/booking_screen.dart';
+import 'screens/about_screen.dart';
+import 'screens/contact_screen.dart';
+import 'screens/faq_screen.dart';
 
 void main() {
   runApp(const AwladRizkApp());
@@ -19,10 +22,10 @@ class AwladRizkApp extends StatelessWidget {
     return MaterialApp(
       builder: (context, child) {
         return Container(
-          color: Colors.black87, // Dark background for the outside area on desktop
+          color: Colors.black87,
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480), // Mobile phone width constraint
+              constraints: const BoxConstraints(maxWidth: 480),
               child: ClipRect(
                 child: child!,
               ),
@@ -61,18 +64,9 @@ class AwladRizkApp extends StatelessWidget {
         '/services': (_) => const ServicesScreen(),
         '/service_detail': (_) => const ServiceDetailScreen(),
         '/booking': (_) => const BookingScreen(),
-        '/about': (_) => const NotImplementedScreen(
-          title: 'من نحن',
-          description: 'صفحة قصتنا ولماذا أولاد رزق هم الخيار الأفضل قيد التطوير.',
-        ),
-        '/contact': (_) => const NotImplementedScreen(
-          title: 'تواصل معنا',
-          description: 'صفحة التواصل مع الخريطة والهاتف قيد التطوير.',
-        ),
-        '/faq': (_) => const NotImplementedScreen(
-          title: 'الأسئلة الشائعة',
-          description: 'صفحة جميع الأسئلة الشائعة قيد التطوير.',
-        ),
+        '/about': (_) => const AboutScreen(),
+        '/contact': (_) => const ContactScreen(),
+        '/faq': (_) => const FAQScreen(),
       },
     );
   }
