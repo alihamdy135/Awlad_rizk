@@ -83,6 +83,24 @@ class ApiService {
     return _fallbackFAQs;
   }
 
+  static Future<String> sendChatMessage(String message) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$kBaseUrl/api/chat'),
+        headers: _headers,
+        body: jsonEncode({'message': message}),
+      ).timeout(const Duration(seconds: 15));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return data['data'];
+        }
+      }
+    } catch (_) {}
+    return 'عذراً، لم أتمكن من الاتصال بالخادم. يرجى المحاولة لاحقاً.';
+  }
+
   // ─── Fallback Data ────────────────────────────────────────
   static final _fallbackServices = [
     ServiceModel(id:'1', serviceId:'SRV-001', categoryId:'CAT-01', nameAr:'تنظيف مكيف سبليت', shortDescriptionAr:'تنظيف شامل للوحدة الداخلية والخارجية بمواد متخصصة', basePriceSar:120, priceUnit:'للوحدة', warrantyDays:30, slug:'split-ac-cleaning', isFeatured:true),

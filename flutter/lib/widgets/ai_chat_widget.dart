@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import '../api_service.dart';
 import '../constants.dart';
 
 class AiChatWidget extends StatefulWidget {
@@ -16,34 +16,10 @@ class _AiChatWidgetState extends State<AiChatWidget> {
     {'role': 'assistant', 'text': 'مرحباً! أنا المساعد الذكي لأولاد رزق. كيف يمكنني مساعدتك اليوم بخصوص خدمات التكييف؟'}
   ];
   bool _isLoading = false;
-  late final GenerativeModel _model;
-  late final ChatSession _chatSession;
 
   @override
   void initState() {
     super.initState();
-    // Split key to evade basic scanners
-    final apiKey = 'AQ.Ab8RN6JumzW_VqDaiuYfb' + 'jZDA1JS3toQe9C_mJWjQR8cZiQsvg';
-    _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
-      apiKey: apiKey,
-      systemInstruction: Content.system('''أنت مساعد ذكي لشركة "أولاد رزق للتبريد والتكييف". 
-مهمتك هي الإجابة على استفسارات العملاء بناءً على المعلومات التالية فقط.
-إذا سألك العميل عن شيء غير موجود في المعلومات، اعتذر بلباقة وأخبره أنه يمكنه التواصل عبر الهاتف (+966 50 000 0000).
-كن ودوداً، مختصراً، واحترافياً. تحدث باللغة العربية.
-
-الخدمات المتوفرة:
-- تنظيف مكيف سبليت: تنظيف شامل للوحدة (120 ريال, ضمان 30 يوم)
-- صيانة وإصلاح مكيفات: (200 ريال, ضمان 30 يوم)
-- تعبئة فريون: (150 ريال, ضمان 30 يوم)
-- لحام نحاس: (250 ريال, ضمان 30 يوم)
-- تنظيف داكت سنترال: (500 ريال, ضمان 30 يوم)
-
-الأسئلة الشائعة:
-س: متى يتم الدفع؟ ج: الدفع بعد الخدمة.
-س: ما هي مناطق العمل؟ ج: في جميع أحياء مدينة جدة.'''),
-    );
-    _chatSession = _model.startChat();
   }
 
   Future<void> _sendMessage() async {
@@ -57,9 +33,9 @@ class _AiChatWidgetState extends State<AiChatWidget> {
     _controller.clear();
 
     try {
-      final response = await _chatSession.sendMessage(Content.text(text));
+      final responseText = await ApiService.sendChatMessage(text);
       setState(() {
-        _messages.add({'role': 'assistant', 'text': response.text ?? 'حدث خطأ غير متوقع.'});
+        _messages.add({'role': 'assistant', 'text': responseText});
         _isLoading = false;
       });
     } catch (e) {
