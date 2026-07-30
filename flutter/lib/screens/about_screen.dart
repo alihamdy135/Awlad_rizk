@@ -50,10 +50,10 @@ class AboutScreen extends StatelessWidget {
               Text('لماذا تختارنا؟', style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(kColorSecondary))),
               const SizedBox(height: 16),
               
-              _buildFeatureItem(Icons.verified_user_outlined, 'ضمان حقيقي', 'نقدم ضماناً على جميع خدمات الصيانة والتركيب لضمان راحة بالك.'),
-              _buildFeatureItem(Icons.speed_outlined, 'سرعة الإنجاز', 'نصلك في أسرع وقت وننجز العمل بكفاءة واحترافية عالية.'),
-              _buildFeatureItem(Icons.engineering_outlined, 'فريق متخصص', 'فنيون مدربون تدريباً عالياً للتعامل مع أحدث أجهزة التكييف.'),
-              _buildFeatureItem(Icons.support_agent_outlined, 'خدمة عملاء 24/7', 'متواجدون دائماً للرد على استفساراتكم وحل مشاكلكم.'),
+              _buildFeatureItem(Icons.verified_user, 'ضمان حقيقي', 'نقدم ضماناً على جميع خدمات الصيانة والتركيب لضمان راحة بالك.'),
+              _buildFeatureItem(Icons.speed, 'سرعة الإنجاز', 'نصلك في أسرع وقت وننجز العمل بكفاءة واحترافية عالية.'),
+              _buildFeatureItem(Icons.engineering, 'فريق متخصص', 'فنيون مدربون تدريباً عالياً للتعامل مع أحدث أجهزة التكييف.'),
+              _buildFeatureItem(Icons.support_agent, 'خدمة عملاء 24/7', 'متواجدون دائماً للرد على استفساراتكم وحل مشاكلكم.'),
               
               const SizedBox(height: 40),
             ],

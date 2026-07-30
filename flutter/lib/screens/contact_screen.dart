@@ -26,28 +26,28 @@ class ContactScreen extends StatelessWidget {
               
               const SizedBox(height: 32),
               _buildContactCard(
-                icon: Icons.phone_in_talk_outlined,
+                icon: Icons.phone,
                 title: 'اتصل بنا المبيعات',
                 subtitle: '+966 50 000 0000',
                 color: const Color(kColorPrimary),
               ),
               const SizedBox(height: 16),
               _buildContactCard(
-                icon: Icons.support_agent_outlined,
+                icon: Icons.headset_mic,
                 title: 'الدعم الفني',
                 subtitle: '+966 50 000 0001',
                 color: const Color(kColorPrimary),
               ),
               const SizedBox(height: 16),
               _buildContactCard(
-                icon: Icons.email_outlined,
+                icon: Icons.email,
                 title: 'البريد الإلكتروني',
                 subtitle: 'info@awlad-rizk.com',
                 color: const Color(kColorPrimary),
               ),
               const SizedBox(height: 16),
               _buildContactCard(
-                icon: Icons.location_on_outlined,
+                icon: Icons.location_on,
                 title: 'العنوان',
                 subtitle: 'جدة، المملكة العربية السعودية',
                 color: const Color(kColorPrimary),
