@@ -330,17 +330,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  IconData _getIconFromName(String name) {
-    switch(name) {
-      case 'cleaning_services': return Icons.cleaning_services;
-      case 'build': return Icons.build;
-      case 'ac_unit': return Icons.ac_unit;
-      case 'local_fire_department': return Icons.local_fire_department;
-      case 'description': return Icons.description;
-      default: return Icons.home_repair_service;
-    }
-  }
-
   // ─── Categories ─────────────────────────────────────────────────────
   Widget _buildCategories() {
     if (_categories.isEmpty) return const SizedBox();
@@ -374,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(_getIconFromName(cat.iconName), color: const Color(kColorPrimary), size: 28),
+                        Text(cat.iconName, style: const TextStyle(fontSize: 26)),
                         const SizedBox(height: 6),
                         Text(cat.nameAr, style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(kColorSecondary)), textAlign: TextAlign.center),
                       ],
@@ -423,14 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildServiceCard(ServiceModel svc) {
-    final icons = {
-      'تنظيف مكيف سبليت': Icons.cleaning_services,
-      'صيانة وإصلاح مكيفات': Icons.build,
-      'تعبئة فريون': Icons.ac_unit,
-      'لحام نحاس': Icons.local_fire_department,
-      'عقد صيانة دورية': Icons.description,
-      'تنظيف داكت سنترال': Icons.business,
-    };
+    final icons = {'تنظيف مكيف سبليت':'🧹','صيانة وإصلاح مكيفات':'🔧','تعبئة فريون':'❄️','لحام نحاس':'🔥','عقد صيانة دورية':'📋','تنظيف داكت سنترال':'🏢'};
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
@@ -453,11 +435,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
-                  color: const Color(kColorPrimary).withOpacity(0.1),
+                  color: const Color(kColorBg),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(kColorPrimary).withOpacity(0.2)),
+                  border: Border.all(color: const Color(kColorBorder)),
                 ),
-                child: Center(child: Icon(icons[svc.nameAr] ?? Icons.ac_unit, color: const Color(kColorPrimary), size: 30)),
+                child: Center(child: Text(icons[svc.nameAr] ?? '❄️', style: const TextStyle(fontSize: 30))),
               ),
               const SizedBox(width: 14),
               // Info
@@ -729,10 +711,20 @@ class _HomeScreenState extends State<HomeScreen> {
   // ─── WhatsApp FAB ────────────────────────────────────────────────────
   Widget _buildWhatsAppFAB() {
     return FloatingActionButton(
-      onPressed: () {},
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: const AiChatWidget(),
+          ),
+        );
+      },
       backgroundColor: const Color(0xFF25D366),
       elevation: 6,
-      child: const Text('💬', style: TextStyle(fontSize: 26)),
+      child: const Icon(Icons.support_agent, color: Colors.white, size: 28),
     );
   }
 
