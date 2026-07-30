@@ -1,4 +1,5 @@
 const String kBaseUrl = 'https://awlad-rizk.vercel.app';
+const String kGeminiApiKey = 'ضع_مفتاح_جوجل_هنا'; // TODO: Paste your Gemini API Key here
 
 const String kWhatsAppNumber = '966500000000';
 const String kWhatsAppUrl = 'https://wa.me/$kWhatsAppNumber?text=أهلاً، أريد الاستفسار عن خدمات التكييف';
