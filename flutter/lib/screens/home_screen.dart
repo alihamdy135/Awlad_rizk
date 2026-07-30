@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<ServiceModel> _services = [];
   List<CategoryModel> _categories = [];
   List<TestimonialModel> _testimonials = [];
@@ -47,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(kColorBg),
         body: _loading
             ? _buildSkeleton()
@@ -63,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   SliverToBoxAdapter(child: _buildFooter()),
                 ],
               ),
+        drawer: _buildDrawer(),
         floatingActionButton: _buildWhatsAppFAB(),
         floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       ),
@@ -100,6 +103,10 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
+                IconButton(
+                  icon: const Icon(Icons.menu, color: Color(kColorPrimary)),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
                 // Logo
                 Container(
                   width: 46,
@@ -672,7 +679,64 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateTo(BuildContext context, String route) {
     Navigator.pushNamed(context, '/$route');
   }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      backgroundColor: const Color(kColorBg),
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Color(kColorPrimary)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    image: DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text('أولاد رزق للتبريد والتكييف', style: GoogleFonts.cairo(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home_outlined, color: Color(kColorPrimary)),
+            title: Text('الرئيسية', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+            onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.build_circle_outlined, color: Color(kColorPrimary)),
+            title: Text('خدماتنا', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(context); _navigateTo(context, 'services'); },
+          ),
+          ListTile(
+            leading: const Icon(Icons.info_outline, color: Color(kColorPrimary)),
+            title: Text('من نحن', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(context); _navigateTo(context, 'about'); },
+          ),
+          ListTile(
+            leading: const Icon(Icons.help_outline, color: Color(kColorPrimary)),
+            title: Text('الأسئلة الشائعة', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(context); _navigateTo(context, 'faq'); },
+          ),
+          ListTile(
+            leading: const Icon(Icons.contact_support_outlined, color: Color(kColorPrimary)),
+            title: Text('تواصل معنا', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(context); _navigateTo(context, 'contact'); },
+          ),
+        ],
+      ),
+    );
+  }
 }
+
 
 // ─── Grid Painter ────────────────────────────────────────────────────
 class _GridPainter extends CustomPainter {
