@@ -721,11 +721,11 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text('نشكرك على ثقتك بأولاد رزق. مشاركة تجربتك تهمنا!', style: GoogleFonts.cairo(fontSize: 14)),
               const SizedBox(height: 16),
-              TextField(decoration: InputDecoration(labelText: 'الاسم', border: OutlineInputBorder())),
+              TextField(decoration: const InputDecoration(labelText: 'الاسم', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(decoration: InputDecoration(labelText: 'التقييم (1 إلى 5)', border: OutlineInputBorder())),
+              TextField(decoration: const InputDecoration(labelText: 'التقييم (1 إلى 5)', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(decoration: InputDecoration(labelText: 'رأيك', border: OutlineInputBorder(), maxLines: 3)),
+              TextField(decoration: const InputDecoration(labelText: 'رأيك', border: OutlineInputBorder()), maxLines: 3),
             ],
           ),
           actions: [

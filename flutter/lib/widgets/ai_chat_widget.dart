@@ -27,7 +27,7 @@ class _AiChatWidgetState extends State<AiChatWidget> {
     _model = GenerativeModel(
       model: 'gemini-1.5-flash',
       apiKey: apiKey,
-      systemInstruction: Content.system('أنت مساعد ذكي لشركة "أولاد رزق للتبريد والتكييف". 
+      systemInstruction: Content.system('''أنت مساعد ذكي لشركة "أولاد رزق للتبريد والتكييف". 
 مهمتك هي الإجابة على استفسارات العملاء بناءً على المعلومات التالية فقط.
 إذا سألك العميل عن شيء غير موجود في المعلومات، اعتذر بلباقة وأخبره أنه يمكنه التواصل عبر الهاتف (+966 50 000 0000).
 كن ودوداً، مختصراً، واحترافياً. تحدث باللغة العربية.
@@ -41,7 +41,7 @@ class _AiChatWidgetState extends State<AiChatWidget> {
 
 الأسئلة الشائعة:
 س: متى يتم الدفع؟ ج: الدفع بعد الخدمة.
-س: ما هي مناطق العمل؟ ج: في جميع أحياء مدينة جدة.'),
+س: ما هي مناطق العمل؟ ج: في جميع أحياء مدينة جدة.'''),
     );
     _chatSession = _model.startChat();
   }
