@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../models.dart';
+import '../widgets/ai_chat_widget.dart';
 import '../api_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -247,14 +248,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 32),
                 // Stats
-                Row(
-                  children: [
-                    _buildHeroStat('+500', 'عميل راضٍ'),
-                    _buildStatDivider(),
-                    _buildHeroStat('4.9★', 'متوسط التقييم'),
-                    _buildStatDivider(),
-                    _buildHeroStat('30', 'يوم ضمان'),
-                  ],
+                FutureBuilder<Map<String, dynamic>>(
+                  future: ApiService.getStats(),
+                  builder: (context, snapshot) {
+                    final customers = snapshot.data?['total_satisfied_customers'] ?? 500;
+                    final rating = snapshot.data?['average_rating'] ?? 4.9;
+                    return Row(
+                      children: [
+                        _buildHeroStat('+$customers', 'عميل راضٍ'),
+                        _buildStatDivider(),
+                        _buildHeroStat('$rating★', 'متوسط التقييم'),
+                        _buildStatDivider(),
+                        _buildHeroStat('30', 'يوم ضمان'),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -401,7 +409,9 @@ class _HomeScreenState extends State<HomeScreen> {
         boxShadow: [BoxShadow(color: const Color(kColorSecondary).withOpacity(0.06), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: InkWell(
-        onTap: () => _navigateTo(context, 'service_detail'),
+        onTap: () {
+          Navigator.pushNamed(context, '/service_detail', arguments: svc);
+        },
         borderRadius: BorderRadius.circular(18),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -456,26 +466,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ─── Testimonials ────────────────────────────────────────────────────
   Widget _buildTestimonials() {
-    if (_testimonials.isEmpty) return const SizedBox();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 32, 0, 0),
+      padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('ماذا يقول عملاؤنا', style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(kColorSecondary))),
-                Text('تجارب حقيقية من عملاء جدة', style: GoogleFonts.cairo(fontSize: 14, color: const Color(kColorTextLight))),
-              ],
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('ماذا يقول عملاؤنا', style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(kColorSecondary))),
+                  Text('تجارب حقيقية من عملاء جدة', style: GoogleFonts.cairo(fontSize: 14, color: const Color(kColorTextLight))),
+                ],
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _showAddReviewDialog(),
+                icon: const Icon(Icons.star, size: 18),
+                label: Text('أضف تقييمك', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(kColorPrimary),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 200,
-            child: ListView.separated(
+          if (_testimonials.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Text('كن أول من يشاركنا رأيه!', style: GoogleFonts.cairo(fontSize: 16, color: const Color(kColorTextLight))),
+              ),
+            )
+          else
+            SizedBox(
+              height: 200,
+              child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(left: 16),
               itemCount: _testimonials.length,
@@ -678,6 +707,43 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _navigateTo(BuildContext context, String route) {
     Navigator.pushNamed(context, '/$route');
+  }
+
+  void _showAddReviewDialog() {
+    // A simple dialog for adding a review, can be expanded to make API call
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text('أضف تقييمك', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('نشكرك على ثقتك بأولاد رزق. مشاركة تجربتك تهمنا!', style: GoogleFonts.cairo(fontSize: 14)),
+              const SizedBox(height: 16),
+              TextField(decoration: InputDecoration(labelText: 'الاسم', border: OutlineInputBorder())),
+              const SizedBox(height: 12),
+              TextField(decoration: InputDecoration(labelText: 'التقييم (1 إلى 5)', border: OutlineInputBorder())),
+              const SizedBox(height: 12),
+              TextField(decoration: InputDecoration(labelText: 'رأيك', border: OutlineInputBorder(), maxLines: 3)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('إلغاء', style: GoogleFonts.cairo()),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('شكراً لتقييمك! سيتم مراجعته وإضافته قريباً.')));
+              },
+              child: Text('إرسال', style: GoogleFonts.cairo()),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildDrawer() {
