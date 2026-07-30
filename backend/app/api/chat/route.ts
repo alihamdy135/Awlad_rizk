@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Service, FAQ } from '@/models';
 
-const genAI = new GoogleGenerativeAI('AQ.Ab8RN6JumzW_VqDaiuYfb' + 'jZDA1JS3toQe9C_mJWjQR8cZiQsvg');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(request: Request) {
   try {
