@@ -19,10 +19,12 @@ void main() async {
     if (kIsWeb) {
       await Firebase.initializeApp(
         options: const FirebaseOptions(
-          apiKey: 'AIzaSyAtSwiBfCry-b1aGKmdfrN7upkgVbnHSwU',
-          appId: '1:549682272929:android:4f930f8d5ebe0571446ee0',
+          apiKey: 'AIzaSyAmUPsW2V-OXAb3bb6JQVhzt-GBaGdEAPI',
+          appId: '1:549682272929:web:8e1298cb4d14374c446ee0',
           messagingSenderId: '549682272929',
           projectId: 'awlad-rizk',
+          authDomain: 'awlad-rizk.firebaseapp.com',
+          storageBucket: 'awlad-rizk.firebasestorage.app',
         ),
       );
     } else {
