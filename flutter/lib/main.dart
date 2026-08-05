@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'constants.dart';
 import 'screens/home_screen.dart';
 import 'screens/not_implemented_screen.dart';
@@ -14,10 +15,10 @@ import 'screens/faq_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    // If you are using Flutter Web, you'll need to pass firebaseOptions
     await Firebase.initializeApp();
+    await GoogleSignIn.instance.initialize();
   } catch (e) {
-    debugPrint('Firebase init error: $e');
+    debugPrint('Firebase/GoogleSignIn init error: $e');
   }
   runApp(const AwladRizkApp());
 }

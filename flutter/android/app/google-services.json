@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "549682272929",
+    "project_id": "awlad-rizk",
+    "storage_bucket": "awlad-rizk.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:549682272929:android:4f930f8d5ebe0571446ee0",
+        "android_client_info": {
+          "package_name": "com.awladrizk.awlad_rizk_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "549682272929-1ntj7kvl5okq7b5f5srudgl75r0at4dk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtSwiBfCry-b1aGKmdfrN7upkgVbnHSwU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "549682272929-1ntj7kvl5okq7b5f5srudgl75r0at4dk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
