@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,7 +16,18 @@ import 'screens/faq_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await Firebase.initializeApp();
+    if (kIsWeb) {
+      await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: 'AIzaSyAtSwiBfCry-b1aGKmdfrN7upkgVbnHSwU',
+          appId: '1:549682272929:android:4f930f8d5ebe0571446ee0',
+          messagingSenderId: '549682272929',
+          projectId: 'awlad-rizk',
+        ),
+      );
+    } else {
+      await Firebase.initializeApp();
+    }
     await GoogleSignIn.instance.initialize();
   } catch (e) {
     debugPrint('Firebase/GoogleSignIn init error: $e');

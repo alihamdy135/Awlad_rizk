@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../models.dart';
@@ -799,7 +800,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           // User Auth Section
           StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
+            stream: (Firebase.apps.isNotEmpty) ? FirebaseAuth.instance.authStateChanges() : const Stream.empty(),
             builder: (context, snapshot) {
               final user = snapshot.data;
               if (user != null) {
