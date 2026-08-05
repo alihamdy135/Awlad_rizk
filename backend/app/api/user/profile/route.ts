@@ -3,11 +3,21 @@ import { connectToDatabase } from '@/lib/mongodb';
 import { UserProfile } from '@/models';
 import { verifyOrDecodeToken } from '@/lib/firebase-auth-helper';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 200, headers: corsHeaders });
+}
+
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
     }
 
     const token = authHeader.split('Bearer ')[1];
@@ -19,7 +29,6 @@ export async function GET(request: Request) {
     let profile = await UserProfileModel.findOne({ user_id: userId }).lean();
 
     if (!profile) {
-      // Create default profile from decoded Google token
       const newProfile = new UserProfileModel({
         user_id: userId,
         full_name: decoded.name || '',
@@ -32,10 +41,10 @@ export async function GET(request: Request) {
       profile = newProfile.toObject();
     }
 
-    return NextResponse.json({ success: true, data: profile });
+    return NextResponse.json({ success: true, data: profile }, { headers: corsHeaders });
   } catch (error) {
     console.error('Get Profile Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to fetch profile' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch profile' }, { status: 500, headers: corsHeaders });
   }
 }
 
@@ -43,7 +52,7 @@ export async function PUT(request: Request) {
   try {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
     }
 
     const token = authHeader.split('Bearer ')[1];
@@ -66,10 +75,9 @@ export async function PUT(request: Request) {
       { new: true, upsert: true }
     ).lean();
 
-    return NextResponse.json({ success: true, data: updatedProfile });
+    return NextResponse.json({ success: true, data: updatedProfile }, { headers: corsHeaders });
   } catch (error) {
     console.error('Update Profile Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to update profile' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to update profile' }, { status: 500, headers: corsHeaders });
   }
 }
-

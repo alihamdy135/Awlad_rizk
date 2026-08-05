@@ -3,11 +3,21 @@ import { connectToDatabase } from '@/lib/mongodb';
 import { Booking, Testimonial } from '@/models';
 import { verifyOrDecodeToken } from '@/lib/firebase-auth-helper';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 200, headers: corsHeaders });
+}
+
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
     }
 
     const token = authHeader.split('Bearer ')[1];
@@ -18,15 +28,14 @@ export async function GET(request: Request) {
     await connectToDatabase();
     const BookingModel = Booking();
 
-    // Query bookings matching either user_id or customer_email
     const userBookings = await BookingModel.find({
       $or: [{ user_id: userId }, { customer_email: userEmail }]
     }).sort({ createdAt: -1 }).lean();
 
-    return NextResponse.json({ success: true, data: userBookings });
+    return NextResponse.json({ success: true, data: userBookings }, { headers: corsHeaders });
   } catch (error) {
     console.error('Get User Bookings Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to fetch bookings' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch bookings' }, { status: 500, headers: corsHeaders });
   }
 }
 
@@ -34,7 +43,7 @@ export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
     }
 
     const token = authHeader.split('Bearer ')[1];
@@ -48,10 +57,9 @@ export async function POST(request: Request) {
     const { booking_id, rating, review_text } = await request.json();
 
     if (!booking_id || !rating) {
-      return NextResponse.json({ success: false, error: 'booking_id and rating are required' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'booking_id and rating are required' }, { status: 400, headers: corsHeaders });
     }
 
-    // Update booking rating
     const updatedBooking = await BookingModel.findOneAndUpdate(
       { booking_id, $or: [{ user_id: userId }, { customer_email: decoded.email }] },
       { rating, review_text },
@@ -59,10 +67,9 @@ export async function POST(request: Request) {
     ).lean();
 
     if (!updatedBooking) {
-      return NextResponse.json({ success: false, error: 'Booking not found or unauthorized' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Booking not found or unauthorized' }, { status: 404, headers: corsHeaders });
     }
 
-    // Also add to Testimonials if review_text is provided
     if (review_text) {
       const count = await TestimonialModel.countDocuments();
       const testimonial_id = `TST-${String(1001 + count).padStart(4, '0')}`;
@@ -79,10 +86,9 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ success: true, data: updatedBooking });
+    return NextResponse.json({ success: true, data: updatedBooking }, { headers: corsHeaders });
   } catch (error) {
     console.error('Rate Booking Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to rate booking' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to rate booking' }, { status: 500, headers: corsHeaders });
   }
 }
-
