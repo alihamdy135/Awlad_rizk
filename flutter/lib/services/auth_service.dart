@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -10,19 +11,19 @@ class AuthService {
   // Sign in with Google
   static Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Trigger the authentication flow using google_sign_in 7.x API
-      final GoogleSignInAccount googleUser = await GoogleSignIn.instance.authenticate();
-
-      // Obtain the auth details
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-
-      // Create a new credential with the ID Token
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
-
-      // Return the UserCredential from Firebase
-      return await _auth.signInWithCredential(credential);
+      if (kIsWeb) {
+        // On Web, Firebase Auth popup handles Google Sign-In natively and seamlessly
+        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        return await _auth.signInWithPopup(googleProvider);
+      } else {
+        // On Mobile (Android/iOS)
+        final GoogleSignInAccount googleUser = await GoogleSignIn.instance.authenticate();
+        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
+        );
+        return await _auth.signInWithCredential(credential);
+      }
     } catch (e) {
       print('Error during Google Sign In: $e');
       rethrow;
