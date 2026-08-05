@@ -852,6 +852,11 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () => Navigator.pop(context),
           ),
           ListTile(
+            leading: const Icon(Icons.account_circle_outlined, color: Color(kColorPrimary)),
+            title: Text('حسابي وطلباتي', style: GoogleFonts.cairo(fontWeight: FontWeight.w700, color: const Color(kColorPrimary))),
+            onTap: () { Navigator.pop(context); _navigateTo(context, 'profile'); },
+          ),
+          ListTile(
             leading: const Icon(Icons.build_circle_outlined, color: Color(kColorPrimary)),
             title: Text('خدماتنا', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
             onTap: () { Navigator.pop(context); _navigateTo(context, 'services'); },

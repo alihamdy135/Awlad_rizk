@@ -161,8 +161,10 @@ const TimeSlotSchema = new Schema<ITimeSlot>({
 // ─── Booking ─────────────────────────────────────────────────
 export interface IBooking extends Document {
   booking_id: string;
+  user_id?: string;
   customer_name: string;
   customer_phone: string;
+  customer_email?: string;
   service_id: string;
   area_id: string;
   address_detail: string;
@@ -172,12 +174,16 @@ export interface IBooking extends Document {
   notes: string;
   status_id: string;
   estimated_price_sar: number;
+  rating?: number;
+  review_text?: string;
   created_at: string;
 }
 const BookingSchema = new Schema<IBooking>({
   booking_id: { type: String, unique: true },
+  user_id: String,
   customer_name: String,
   customer_phone: String,
+  customer_email: String,
   service_id: String,
   area_id: String,
   address_detail: String,
@@ -187,8 +193,28 @@ const BookingSchema = new Schema<IBooking>({
   notes: String,
   status_id: { type: String, default: 'STAT-01' },
   estimated_price_sar: Number,
+  rating: Number,
+  review_text: String,
   created_at: { type: String, default: () => new Date().toISOString() },
 }, { collection: 'bookings', timestamps: true });
+
+// ─── UserProfile ──────────────────────────────────────────────
+export interface IUserProfile extends Document {
+  user_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  photo_url: string;
+}
+const UserProfileSchema = new Schema<IUserProfile>({
+  user_id: { type: String, required: true, unique: true },
+  full_name: String,
+  email: String,
+  phone: String,
+  address: String,
+  photo_url: String,
+}, { collection: 'user_profiles', timestamps: true });
 
 // ─── SiteSettings ────────────────────────────────────────────
 export interface ISiteSetting extends Document {
@@ -253,6 +279,7 @@ export const FAQ = () => getModel<IFAQ>('FAQ', FAQSchema);
 export const ServiceArea = () => getModel<IServiceArea>('ServiceArea', ServiceAreaSchema);
 export const TimeSlot = () => getModel<ITimeSlot>('TimeSlot', TimeSlotSchema);
 export const Booking = () => getModel<IBooking>('Booking', BookingSchema);
+export const UserProfile = () => getModel<IUserProfile>('UserProfile', UserProfileSchema);
 export const SiteSetting = () => getModel<ISiteSetting>('SiteSetting', SiteSettingSchema);
 export const HeroBanner = () => getModel<IHeroBanner>('HeroBanner', HeroBannerSchema);
 export const ContactInfo = () => getModel<IContactInfo>('ContactInfo', ContactInfoSchema);

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'models.dart';
+import 'models/user_profile.dart';
+import 'services/auth_service.dart';
 
 class ApiService {
   static const _headers = {'Content-Type': 'application/json'};
@@ -99,6 +101,97 @@ class ApiService {
       }
     } catch (_) {}
     return 'عذراً، لم أتمكن من الاتصال بالخادم. يرجى المحاولة لاحقاً.';
+  }
+
+  // ─── User Profile & Dashboard APIs ───────────────────────────
+  static Future<UserProfileModel?> getUserProfile() async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return null;
+      final response = await http.get(
+        Uri.parse('$kBaseUrl/api/user/profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return UserProfileModel.fromJson(data['data']);
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static Future<bool> updateUserProfile(UserProfileModel profile) async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return false;
+      final response = await http.put(
+        Uri.parse('$kBaseUrl/api/user/profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode(profile.toJson()),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  static Future<List<UserBookingModel>> getUserBookings() async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return [];
+      final response = await http.get(
+        Uri.parse('$kBaseUrl/api/user/bookings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return (data['data'] as List).map((e) => UserBookingModel.fromJson(e)).toList();
+        }
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  static Future<bool> rateBooking(String bookingId, int rating, String reviewText) async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return false;
+      final response = await http.post(
+        Uri.parse('$kBaseUrl/api/user/bookings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'booking_id': bookingId,
+          'rating': rating,
+          'review_text': reviewText,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+    } catch (_) {}
+    return false;
   }
 
   // ─── Fallback Data ────────────────────────────────────────

@@ -12,6 +12,7 @@ import 'screens/booking_screen.dart';
 import 'screens/about_screen.dart';
 import 'screens/contact_screen.dart';
 import 'screens/faq_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -92,6 +93,7 @@ class AwladRizkApp extends StatelessWidget {
         '/about': (_) => const AboutScreen(),
         '/contact': (_) => const ContactScreen(),
         '/faq': (_) => const FAQScreen(),
+        '/profile': (_) => const ProfileScreen(),
       },
     );
   }
