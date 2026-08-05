@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { UserProfile } from '@/models';
-import { auth } from '@/lib/firebase-admin';
+import { verifyOrDecodeToken } from '@/lib/firebase-auth-helper';
 
 export async function GET(request: Request) {
   try {
@@ -11,10 +11,7 @@ export async function GET(request: Request) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    if (!auth) {
-      return NextResponse.json({ success: false, error: 'Firebase Auth unconfigured' }, { status: 500 });
-    }
-    const decoded = await auth.verifyIdToken(token);
+    const decoded = await verifyOrDecodeToken(token);
     const userId = decoded.uid;
 
     await connectToDatabase();
@@ -50,10 +47,7 @@ export async function PUT(request: Request) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    if (!auth) {
-      return NextResponse.json({ success: false, error: 'Firebase Auth unconfigured' }, { status: 500 });
-    }
-    const decoded = await auth.verifyIdToken(token);
+    const decoded = await verifyOrDecodeToken(token);
     const userId = decoded.uid;
 
     await connectToDatabase();
@@ -78,3 +72,4 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: false, error: 'Failed to update profile' }, { status: 500 });
   }
 }
+

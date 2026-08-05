@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Booking, Testimonial } from '@/models';
-import { auth } from '@/lib/firebase-admin';
+import { verifyOrDecodeToken } from '@/lib/firebase-auth-helper';
 
 export async function GET(request: Request) {
   try {
@@ -11,10 +11,7 @@ export async function GET(request: Request) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    if (!auth) {
-      return NextResponse.json({ success: false, error: 'Firebase Auth unconfigured' }, { status: 500 });
-    }
-    const decoded = await auth.verifyIdToken(token);
+    const decoded = await verifyOrDecodeToken(token);
     const userId = decoded.uid;
     const userEmail = decoded.email;
 
@@ -41,10 +38,7 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    if (!auth) {
-      return NextResponse.json({ success: false, error: 'Firebase Auth unconfigured' }, { status: 500 });
-    }
-    const decoded = await auth.verifyIdToken(token);
+    const decoded = await verifyOrDecodeToken(token);
     const userId = decoded.uid;
 
     await connectToDatabase();
@@ -91,3 +85,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Failed to rate booking' }, { status: 500 });
   }
 }
+
