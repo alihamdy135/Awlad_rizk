@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
 import '../models.dart';
-import '../widgets/ai_chat_widget.dart';
 import '../api_service.dart';
+import '../constants.dart';
+import '../widgets/ai_chat_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -794,6 +796,48 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text('أولاد رزق للتبريد والتكييف', style: GoogleFonts.cairo(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
               ],
             ),
+          ),
+          // User Auth Section
+          StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, snapshot) {
+              final user = snapshot.data;
+              if (user != null) {
+                return Column(
+                  children: [
+                    ListTile(
+                      leading: CircleAvatar(backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null, child: user.photoURL == null ? const Icon(Icons.person) : null),
+                      title: Text(user.displayName ?? 'مستخدم', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+                      subtitle: Text(user.email ?? '', style: const TextStyle(fontSize: 12)),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.logout, color: Colors.red),
+                      title: Text('تسجيل الخروج', style: GoogleFonts.cairo(fontWeight: FontWeight.w600, color: Colors.red)),
+                      onTap: () async {
+                        await AuthService.signOut();
+                      },
+                    ),
+                    const Divider(),
+                  ],
+                );
+              } else {
+                return Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.login, color: Color(kColorPrimary)),
+                      title: Text('تسجيل الدخول', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+                      onTap: () async {
+                        final userCred = await AuthService.signInWithGoogle();
+                        if (userCred == null && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل تسجيل الدخول')));
+                        }
+                      },
+                    ),
+                    const Divider(),
+                  ],
+                );
+              }
+            },
           ),
           ListTile(
             leading: const Icon(Icons.home_outlined, color: Color(kColorPrimary)),

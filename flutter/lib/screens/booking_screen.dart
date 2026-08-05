@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../constants.dart';
 import '../models.dart';
+import '../services/auth_service.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -81,9 +82,15 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      String? idToken = await AuthService.getIdToken();
+      Map<String, String> headers = {'Content-Type': 'application/json'};
+      if (idToken != null) {
+        headers['Authorization'] = 'Bearer $idToken';
+      }
+
       final response = await http.post(
         Uri.parse('$kBaseUrl/api/bookings'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: jsonEncode({
           'customer_name': _customerName,
           'customer_phone': _customerPhone,

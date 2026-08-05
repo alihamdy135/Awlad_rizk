@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'constants.dart';
 import 'screens/home_screen.dart';
 import 'screens/not_implemented_screen.dart';
@@ -10,7 +11,14 @@ import 'screens/about_screen.dart';
 import 'screens/contact_screen.dart';
 import 'screens/faq_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    // If you are using Flutter Web, you'll need to pass firebaseOptions
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase init error: $e');
+  }
   runApp(const AwladRizkApp());
 }
 
