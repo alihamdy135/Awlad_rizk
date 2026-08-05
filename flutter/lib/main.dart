@@ -28,7 +28,9 @@ void main() async {
     } else {
       await Firebase.initializeApp();
     }
-    await GoogleSignIn.instance.initialize();
+    await GoogleSignIn.instance.initialize(
+      clientId: '549682272929-1ntj7kvl5okq7b5f5srudgl75r0at4dk.apps.googleusercontent.com',
+    );
   } catch (e) {
     debugPrint('Firebase/GoogleSignIn init error: $e');
   }

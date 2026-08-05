@@ -828,9 +828,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       leading: const Icon(Icons.login, color: Color(kColorPrimary)),
                       title: Text('تسجيل الدخول', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
                       onTap: () async {
-                        final userCred = await AuthService.signInWithGoogle();
-                        if (userCred == null && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل تسجيل الدخول')));
+                        try {
+                          final userCred = await AuthService.signInWithGoogle();
+                          if (userCred == null && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إلغاء تسجيل الدخول أو فشل الاتصال')));
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('حدث خطأ: $e')));
+                          }
                         }
                       },
                     ),
