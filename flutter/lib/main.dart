@@ -19,7 +19,7 @@ void main() async {
     if (kIsWeb) {
       await Firebase.initializeApp(
         options: const FirebaseOptions(
-          apiKey: 'AIzaSyAmUPsW2V-OXAb3bb6JQVhzt-GBaGdEAPI',
+          apiKey: 'AIzaSyAtSwiBfCry-b1aGKmdfrN7upkgVbnHSwU',
           appId: '1:549682272929:web:8e1298cb4d14374c446ee0',
           messagingSenderId: '549682272929',
           projectId: 'awlad-rizk',
