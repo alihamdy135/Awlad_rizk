@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../constants.dart';
 import '../models.dart';
 import '../services/auth_service.dart';
+import '../api_service.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -25,7 +26,10 @@ class _BookingScreenState extends State<BookingScreen> {
   String? _selectedAreaId;
   String? _selectedDate;
   String? _selectedSlotId;
-
+  
+  ServiceModel? _selectedService;
+  List<ServiceModel> _availableServices = [];
+  bool _isLoadingServices = false;
   bool _isSubmitting = false;
 
   final List<Map<String, String>> _areas = [
@@ -42,6 +46,37 @@ class _BookingScreenState extends State<BookingScreen> {
     {'id': 'SLOT-3', 'name': 'عصراً (4م - 8م)'},
     {'id': 'SLOT-4', 'name': 'مساءً (8م - 11م)'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadServices();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final argsService = ModalRoute.of(context)?.settings.arguments as ServiceModel?;
+    if (argsService != null && _selectedService == null) {
+      _selectedService = argsService;
+    }
+  }
+
+  Future<void> _loadServices() async {
+    setState(() => _isLoadingServices = true);
+    try {
+      final services = await ApiService.getServices();
+      setState(() {
+        _availableServices = services;
+        _isLoadingServices = false;
+        if (_selectedService == null && _availableServices.isNotEmpty) {
+          _selectedService = _availableServices.first;
+        }
+      });
+    } catch (_) {
+      setState(() => _isLoadingServices = false);
+    }
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -69,7 +104,15 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  Future<void> _submitBooking(ServiceModel? service) async {
+  Future<void> _submitBooking(ServiceModel? routeService) async {
+    final targetService = routeService ?? _selectedService;
+    if (targetService == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('الرجاء اختيار الخدمة المطلوب حجزها', style: GoogleFonts.cairo())),
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
     if (_selectedAreaId == null || _selectedDate == null || _selectedSlotId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -94,14 +137,14 @@ class _BookingScreenState extends State<BookingScreen> {
         body: jsonEncode({
           'customer_name': _customerName,
           'customer_phone': _customerPhone,
-          'service_id': service?.serviceId ?? 'SRV-000',
+          'service_id': targetService.serviceId,
           'area_id': _selectedAreaId,
           'address_detail': _addressDetail,
           'preferred_date': _selectedDate,
           'slot_id': _selectedSlotId,
           'quantity': _quantity,
           'notes': _notes,
-          'estimated_price_sar': (service?.basePriceSar ?? 0) * _quantity,
+          'estimated_price_sar': targetService.basePriceSar * _quantity,
         }),
       );
 
@@ -113,13 +156,15 @@ class _BookingScreenState extends State<BookingScreen> {
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Icon(Icons.check_circle, color: const Color(0xFF25D366), size: 64),
+            title: const Icon(Icons.check_circle, color: Color(0xFF25D366), size: 64),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text('تم تأكيد طلبك بنجاح!', style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
                 const SizedBox(height: 8),
-                Text('سيتواصل معك فريقنا قريباً لتأكيد الموعد.', style: GoogleFonts.cairo(fontSize: 14, color: const Color(kColorTextLight)), textAlign: TextAlign.center),
+                Text('رقم الحجز: ${data['booking_id'] ?? ''}', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(kColorPrimary))),
+                const SizedBox(height: 8),
+                Text('سيتواصل معك فريق نسيم قريباً لتأكيد الموعد.', style: GoogleFonts.cairo(fontSize: 14, color: const Color(kColorTextLight)), textAlign: TextAlign.center),
               ],
             ),
             actions: [
@@ -153,7 +198,8 @@ class _BookingScreenState extends State<BookingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final service = ModalRoute.of(context)?.settings.arguments as ServiceModel?;
+    final routeService = ModalRoute.of(context)?.settings.arguments as ServiceModel?;
+    final activeService = routeService ?? _selectedService;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -170,7 +216,11 @@ class _BookingScreenState extends State<BookingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (service != null)
+                // Service Selector Section
+                Text('الخدمة المطلوبة', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(kColorSecondary))),
+                const SizedBox(height: 12),
+
+                if (routeService != null)
                   Container(
                     padding: const EdgeInsets.all(16),
                     margin: const EdgeInsets.only(bottom: 24),
@@ -181,19 +231,47 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline, color: Color(kColorPrimary)),
+                        const Icon(Icons.build_circle, color: Color(kColorPrimary), size: 28),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('الخدمة المختارة:', style: GoogleFonts.cairo(fontSize: 12, color: const Color(kColorTextLight))),
-                              Text(service.nameAr, style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(kColorPrimary))),
+                              Text('${routeService.nameAr} (${routeService.basePriceSar} ريال)', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(kColorPrimary))),
                             ],
                           ),
                         ),
                       ],
                     ),
+                  )
+                else
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 24),
+                    child: _isLoadingServices
+                        ? const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+                        : DropdownButtonFormField<ServiceModel>(
+                            value: _selectedService,
+                            decoration: InputDecoration(
+                              labelText: 'اختر الخدمة المطلوبة *',
+                              prefixIcon: const Icon(Icons.build_circle_outlined, color: Color(kColorPrimary)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                              filled: true,
+                              fillColor: Colors.white,
+                            ),
+                            items: _availableServices.map((srv) {
+                              return DropdownMenuItem<ServiceModel>(
+                                value: srv,
+                                child: Text('${srv.nameAr} - (${srv.basePriceSar} ريال)', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w600)),
+                              );
+                            }).toList(),
+                            onChanged: (srv) {
+                              setState(() {
+                                _selectedService = srv;
+                              });
+                            },
+                            validator: (v) => _selectedService == null ? 'الرجاء اختيار الخدمة' : null,
+                          ),
                   ),
 
                 Text('البيانات الشخصية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(kColorSecondary))),
@@ -218,19 +296,25 @@ class _BookingScreenState extends State<BookingScreen> {
                 const SizedBox(height: 16),
                 
                 DropdownButtonFormField<String>(
+                  value: _selectedAreaId,
                   decoration: InputDecoration(
                     labelText: 'الحي',
                     prefixIcon: const Icon(Icons.location_city_outlined, color: Color(kColorPrimary)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(kColorBorder))),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(kColorBorder))),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                     filled: true,
                     fillColor: Colors.white,
                   ),
-                  value: _selectedAreaId,
-                  items: _areas.map((a) => DropdownMenuItem(value: a['id'], child: Text(a['name']!, style: GoogleFonts.cairo()))).toList(),
+                  items: _areas.map((area) {
+                    return DropdownMenuItem(
+                      value: area['id'],
+                      child: Text(area['name']!, style: GoogleFonts.cairo()),
+                    );
+                  }).toList(),
                   onChanged: (v) => setState(() => _selectedAreaId = v),
+                  validator: (v) => v == null ? 'الرجاء اختيار الحي' : null,
                 ),
                 const SizedBox(height: 16),
+
                 _buildTextField(
                   label: 'العنوان بالتفصيل',
                   icon: Icons.home_outlined,
@@ -238,90 +322,115 @@ class _BookingScreenState extends State<BookingScreen> {
                   onSaved: (v) => _addressDetail = v!,
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => _selectDate(context),
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: 'تاريخ الزيارة',
-                            prefixIcon: const Icon(Icons.calendar_month_outlined, color: Color(kColorPrimary)),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            filled: true,
-                            fillColor: Colors.white,
-                          ),
-                          child: Text(_selectedDate ?? 'اختر التاريخ', style: GoogleFonts.cairo(color: _selectedDate == null ? Colors.grey : Colors.black)),
-                        ),
-                      ),
+
+                InkWell(
+                  onTap: () => _selectDate(context),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'تاريخ الزيارة',
+                      prefixIcon: const Icon(Icons.calendar_today_outlined, color: Color(kColorPrimary)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      filled: true,
+                      fillColor: Colors.white,
                     ),
-                  ],
+                    child: Text(
+                      _selectedDate ?? 'اختر التاريخ',
+                      style: GoogleFonts.cairo(color: _selectedDate == null ? Colors.grey[600] : Colors.black),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
+
                 DropdownButtonFormField<String>(
+                  value: _selectedSlotId,
                   decoration: InputDecoration(
-                    labelText: 'الوقت المفضل',
+                    labelText: 'الوقت المفضّل',
                     prefixIcon: const Icon(Icons.access_time_outlined, color: Color(kColorPrimary)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(kColorBorder))),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                     filled: true,
                     fillColor: Colors.white,
                   ),
-                  value: _selectedSlotId,
-                  items: _timeSlots.map((a) => DropdownMenuItem(value: a['id'], child: Text(a['name']!, style: GoogleFonts.cairo()))).toList(),
+                  items: _timeSlots.map((slot) {
+                    return DropdownMenuItem(
+                      value: slot['id'],
+                      child: Text(slot['name']!, style: GoogleFonts.cairo()),
+                    );
+                  }).toList(),
                   onChanged: (v) => setState(() => _selectedSlotId = v),
+                  validator: (v) => v == null ? 'الرجاء اختيار الوقت' : null,
                 ),
 
                 const SizedBox(height: 32),
                 Text('تفاصيل إضافية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(kColorSecondary))),
                 const SizedBox(height: 16),
+
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('عدد المكيفات (الكمية):', style: GoogleFonts.cairo(fontSize: 16)),
-                    const Spacer(),
-                    Container(
-                      decoration: BoxDecoration(color: const Color(kColorPrimary).withOpacity(0.1), shape: BoxShape.circle),
-                      child: IconButton(
-                        icon: const Icon(Icons.remove, color: Color(kColorPrimary)),
-                        onPressed: () {
-                          if (_quantity > 1) setState(() => _quantity--);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('$_quantity', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700)),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(color: const Color(kColorPrimary).withOpacity(0.1), shape: BoxShape.circle),
-                      child: IconButton(
-                        icon: const Icon(Icons.add, color: Color(kColorPrimary)),
-                        onPressed: () {
-                          setState(() => _quantity++);
-                        },
-                      ),
+                    Text('عدد المكيفات (الكمية):', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            if (_quantity > 1) setState(() => _quantity--);
+                          },
+                          icon: const Icon(Icons.remove_circle_outline),
+                          color: const Color(kColorPrimary),
+                        ),
+                        Text('$_quantity', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
+                        IconButton(
+                          onPressed: () => setState(() => _quantity++),
+                          icon: const Icon(Icons.add_circle_outline),
+                          color: const Color(kColorPrimary),
+                        ),
+                      ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
+
                 _buildTextField(
                   label: 'ملاحظات إضافية (اختياري)',
-                  icon: Icons.notes_outlined,
+                  icon: Icons.note_outlined,
                   maxLines: 3,
                   onSaved: (v) => _notes = v ?? '',
                 ),
+                const SizedBox(height: 32),
 
-                const SizedBox(height: 40),
+                // Total estimation card
+                if (activeService != null)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.amber.shade700.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('السعر التقديري الفوري:', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                        Text('${activeService.basePriceSar * _quantity} ريال', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(kColorPrimary))),
+                      ],
+                    ),
+                  ),
+
                 SizedBox(
                   width: double.infinity,
+                  height: 54,
                   child: ElevatedButton(
-                    onPressed: _isSubmitting ? null : () => _submitBooking(service),
+                    onPressed: _isSubmitting ? null : () => _submitBooking(routeService),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      backgroundColor: const Color(kColorPrimary),
                     ),
-                    child: _isSubmitting 
+                    child: _isSubmitting
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : Text('تأكيد الطلب', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700)),
+                        : Text(
+                            'تأكيد الطلب',
+                            style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
                   ),
                 ),
               ],
@@ -335,25 +444,23 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget _buildTextField({
     required String label,
     required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
-    TextInputType? keyboardType,
     String? Function(String?)? validator,
     void Function(String?)? onSaved,
   }) {
     return TextFormField(
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      validator: validator,
-      onSaved: onSaved,
-      style: GoogleFonts.cairo(),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: maxLines == 1 ? Icon(icon, color: const Color(kColorPrimary)) : null,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(kColorBorder))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(kColorBorder))),
+        prefixIcon: Icon(icon, color: const Color(kColorPrimary)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         filled: true,
         fillColor: Colors.white,
       ),
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      validator: validator,
+      onSaved: onSaved,
     );
   }
 }
