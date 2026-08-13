@@ -13,7 +13,7 @@ class AiChatWidget extends StatefulWidget {
 class _AiChatWidgetState extends State<AiChatWidget> {
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, String>> _messages = [
-    {'role': 'assistant', 'text': 'مرحباً! أنا المساعد الذكي لأولاد رزق. كيف يمكنني مساعدتك اليوم بخصوص خدمات التكييف؟'}
+    {'role': 'assistant', 'text': 'مرحباً! أنا المساعد الذكي لشركة نسيم (Naseem). كيف يمكنني مساعدتك اليوم بخصوص خدمات التكييف؟'}
   ];
   bool _isLoading = false;
   late final GenerativeModel _model;
@@ -25,7 +25,7 @@ class _AiChatWidgetState extends State<AiChatWidget> {
     _model = GenerativeModel(
       model: 'gemini-1.5-flash',
       apiKey: kGeminiApiKey,
-      systemInstruction: Content.system('''أنت مساعد ذكي لشركة "أولاد رزق للتبريد والتكييف". 
+      systemInstruction: Content.system('''أنت مساعد ذكي لشركة "نسيم للتبريد والتكييف - Naseem". 
 مهمتك هي الإجابة على استفسارات العملاء بناءً على المعلومات التالية فقط.
 إذا سألك العميل عن شيء غير موجود في المعلومات، اعتذر بلباقة وأخبره أنه يمكنه التواصل عبر الهاتف (+966 50 000 0000).
 كن ودوداً، مختصراً، واحترافياً. تحدث باللغة العربية.

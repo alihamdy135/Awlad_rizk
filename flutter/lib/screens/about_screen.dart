@@ -32,7 +32,7 @@ class AboutScreen extends StatelessWidget {
                   children: [
                     Image.asset('assets/images/logo.png', width: 100, height: 100),
                     const SizedBox(height: 16),
-                    Text('أولاد رزق للتبريد والتكييف', style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w800, color: const Color(kColorSecondary))),
+                    Text('نسيم للتبريد والتكييف - Naseem', style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w800, color: const Color(kColorSecondary))),
                     Text('خبرة تتجاوز 10 سنوات في خدمتكم', style: GoogleFonts.cairo(fontSize: 14, color: const Color(kColorPrimary))),
                   ],
                 ),
@@ -42,7 +42,7 @@ class AboutScreen extends StatelessWidget {
               Text('قصتنا', style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(kColorSecondary))),
               const SizedBox(height: 12),
               Text(
-                'تأسست شركة أولاد رزق بهدف تقديم خدمات تبريد وتكييف استثنائية وعالية الجودة في المملكة. انطلقنا من رؤية واضحة وهي راحة العميل في منزله ومقر عمله، ونجحنا في كسب ثقة آلاف العملاء بفضل فريقنا المحترف والتزامنا بالمواعيد والمصداقية التامة.',
+                'تأسست شركة نسيم (Naseem) بهدف تقديم خدمات تبريد وتكييف استثنائية وعالية الجودة في المملكة. انطلقنا من رؤية واضحة وهي راحة العميل في منزله ومقر عمله، ونجحنا في كسب ثقة آلاف العملاء بفضل فريقنا المحترف والتزامنا بالمواعيد والمصداقية التامة.',
                 style: GoogleFonts.cairo(fontSize: 14, color: const Color(kColorTextLight), height: 1.8),
               ),
               

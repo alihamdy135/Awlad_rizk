@@ -692,18 +692,18 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(width: 36, height: 36, decoration: const BoxDecoration(shape: BoxShape.circle, image: DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover))),
               const SizedBox(width: 10),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('أولاد رزق', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-                Text('للتبريد والتكييف', style: GoogleFonts.cairo(color: Colors.white54, fontSize: 12)),
+                Text('نسيم (Naseem)', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                Text('للتبريد والتكييف والخدمات', style: GoogleFonts.cairo(color: Colors.white54, fontSize: 12)),
               ]),
             ],
           ),
           const SizedBox(height: 16),
-          Text('خدمات تنظيف وصيانة وإصلاح المكيفات في جدة بأعلى معايير الجودة. فنيون محترفون، ضمان حقيقي.', style: GoogleFonts.cairo(color: Colors.white54, fontSize: 13, height: 1.7)),
+          Text('خدمات تنظيف وصيانة وإصلاح المكيفات في المملكة بأعلى معايير الجودة. فنيون محترفون، ضمان حقيقي.', style: GoogleFonts.cairo(color: Colors.white54, fontSize: 13, height: 1.7)),
           const Divider(color: Colors.white12, height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('© ${DateTime.now().year} أولاد رزق. جميع الحقوق محفوظة.', style: GoogleFonts.cairo(color: Colors.white38, fontSize: 12)),
+              Text('© ${DateTime.now().year} نسيم (Naseem). جميع الحقوق محفوظة.', style: GoogleFonts.cairo(color: Colors.white38, fontSize: 12)),
             ],
           ),
         ],
@@ -745,7 +745,7 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('نشكرك على ثقتك بأولاد رزق. مشاركة تجربتك تهمنا!', style: GoogleFonts.cairo(fontSize: 14)),
+              Text('نشكرك على ثقتك بنسيم (Naseem). مشاركة تجربتك تهمنا!', style: GoogleFonts.cairo(fontSize: 14)),
               const SizedBox(height: 16),
               TextField(decoration: const InputDecoration(labelText: 'الاسم', border: OutlineInputBorder())),
               const SizedBox(height: 12),
@@ -794,7 +794,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text('أولاد رزق للتبريد والتكييف', style: GoogleFonts.cairo(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                Text('نسيم للتبريد والتكييف - Naseem', style: GoogleFonts.cairo(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
               ],
             ),
           ),
