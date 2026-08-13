@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../constants.dart';
 import '../models/user_profile.dart';
@@ -196,27 +197,30 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthService.currentUser;
+    return StreamBuilder<User?>(
+      stream: (Firebase.apps.isNotEmpty) ? FirebaseAuth.instance.authStateChanges() : const Stream.empty(),
+      builder: (context, snapshot) {
+        final user = snapshot.data ?? AuthService.currentUser;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: const Color(kColorBg),
-        appBar: AppBar(
-          title: Text('حسابي وطلباتي', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-          centerTitle: true,
-          bottom: TabBar(
-            controller: _tabController,
-            indicatorColor: const Color(kColorPrimary),
-            labelColor: const Color(kColorPrimary),
-            unselectedLabelColor: Colors.grey,
-            tabs: const [
-              Tab(icon: Icon(Icons.person), text: 'البيانات الشخصية'),
-              Tab(icon: Icon(Icons.receipt_long), text: 'طلباتي ومتابعة الحجز'),
-            ],
-          ),
-        ),
-        body: user == null
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Scaffold(
+            backgroundColor: const Color(kColorBg),
+            appBar: AppBar(
+              title: Text('حسابي وطلباتي', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+              centerTitle: true,
+              bottom: TabBar(
+                controller: _tabController,
+                indicatorColor: const Color(kColorPrimary),
+                labelColor: const Color(kColorPrimary),
+                unselectedLabelColor: Colors.grey,
+                tabs: const [
+                  Tab(icon: Icon(Icons.person), text: 'البيانات الشخصية'),
+                  Tab(icon: Icon(Icons.receipt_long), text: 'طلباتي ومتابعة الحجز'),
+                ],
+              ),
+            ),
+            body: user == null
             ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -409,7 +413,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                             ),
                     ],
                   ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

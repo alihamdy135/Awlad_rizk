@@ -802,7 +802,7 @@ class _HomeScreenState extends State<HomeScreen> {
           StreamBuilder<User?>(
             stream: (Firebase.apps.isNotEmpty) ? FirebaseAuth.instance.authStateChanges() : const Stream.empty(),
             builder: (context, snapshot) {
-              final user = snapshot.data;
+              final user = snapshot.data ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance.currentUser : null);
               if (user != null) {
                 final email = (user.email ?? '').toLowerCase().trim();
                 final isAdmin = ApiService.kAdminEmails.contains(email);
