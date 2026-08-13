@@ -59,7 +59,7 @@ class AwladRizkApp extends StatelessWidget {
           ),
         );
       },
-      title: 'أولاد رزق للتبريد والتكييف',
+      title: 'نسيم للتبريد والتكييف - Naseem',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

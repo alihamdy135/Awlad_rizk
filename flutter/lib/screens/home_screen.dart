@@ -129,8 +129,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('أولاد رزق', style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 16, color: const Color(kColorSecondary))),
-                    Text('للتبريد والتكييف', style: GoogleFonts.cairo(fontSize: 11, color: const Color(kColorTextLight))),
+                    Text('نسيم (Naseem)', style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 16, color: const Color(kColorSecondary))),
+                    Text('للتبريد والتكييف والخدمات', style: GoogleFonts.cairo(fontSize: 11, color: const Color(kColorTextLight))),
                   ],
                 ),
                 const Spacer(),
