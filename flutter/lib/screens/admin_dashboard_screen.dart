@@ -161,11 +161,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
+                    color: Colors.white.withOpacity(0.25),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white30, width: 1.5),
+                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
                   ),
-                  child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 30),
+                  child: const Icon(Icons.security, color: Colors.white, size: 30),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -176,7 +176,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                         children: [
                           Text('أهلاً بك في لوحة الإدارة', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
                           const SizedBox(width: 6),
-                          const Icon(Icons.verified_rounded, color: Color(kColorAccent), size: 18),
+                          const Icon(Icons.verified_user, color: Color(kColorAccent), size: 18),
                         ],
                       ),
                       const SizedBox(height: 2),
