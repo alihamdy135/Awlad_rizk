@@ -39,9 +39,10 @@ export async function POST(request: Request) {
     const final_name = customer_name || body.customer_name || 'عميل';
     const final_email = customer_email || body.customer_email || '';
 
-    // Generate booking ID
+    // Generate collision-proof unique booking ID
     const count = await BookingModel.countDocuments();
-    const booking_id = `BK-${String(100001 + count).padStart(6, '0')}`;
+    const uniqueSuffix = Date.now().toString().slice(-4);
+    const booking_id = `BK-${String(100001 + count).padStart(6, '0')}-${uniqueSuffix}`;
 
     const booking = new BookingModel({
       ...body,
