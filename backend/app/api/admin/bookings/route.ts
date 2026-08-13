@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     await connectToDatabase();
     const BookingModel = Booking();
 
-    const bookings = await BookingModel.find().sort({ createdAt: -1 }).lean();
+    const bookings = await BookingModel.find().sort({ _id: -1 }).lean();
 
     return NextResponse.json({ success: true, data: bookings }, { headers: corsHeaders });
   } catch (error: any) {
@@ -37,15 +37,16 @@ export async function PUT(request: Request) {
     const BookingModel = Booking();
 
     const body = await request.json();
-    const { booking_id, status_code } = body;
+    const { booking_id, status_code, status_id } = body;
+    const targetStatus = status_code || status_id;
 
-    if (!booking_id || !status_code) {
+    if (!booking_id || !targetStatus) {
       return NextResponse.json({ success: false, error: 'booking_id and status_code are required' }, { status: 400, headers: corsHeaders });
     }
 
     const updated = await BookingModel.findOneAndUpdate(
       { booking_id },
-      { status_code, status: status_code },
+      { status_code: targetStatus, status_id: targetStatus, status: targetStatus },
       { new: true }
     ).lean();
 

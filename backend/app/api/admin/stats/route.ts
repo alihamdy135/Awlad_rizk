@@ -35,8 +35,10 @@ export async function GET(request: Request) {
     let cancelledCount = 0;
 
     allBookings.forEach((b: any) => {
-      totalRevenue += (b.total_amount_sar || b.total_price_sar || 0);
-      const status = (b.status || b.status_code || '').toUpperCase();
+      const price = Number(b.estimated_price_sar || b.total_amount_sar || b.total_price_sar || 0);
+      totalRevenue += price;
+
+      const status = (b.status_id || b.status_code || b.status || '').toUpperCase();
       if (status === 'STAT-01' || status.includes('انتظار') || status.includes('PENDING')) {
         pendingCount++;
       } else if (status === 'STAT-02' || status.includes('عمل') || status.includes('PROGRESS')) {
