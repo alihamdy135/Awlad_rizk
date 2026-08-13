@@ -87,7 +87,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
       child: Scaffold(
         backgroundColor: const Color(kColorBg),
         appBar: AppBar(
-          title: Text('👑 لوحة التحكم والإدارة (Admin)', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 18)),
+          title: Text('لوحة التحكم والإدارة (Admin)', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 18)),
           centerTitle: true,
           actions: [
             IconButton(
@@ -139,7 +139,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
         children: [
           // Header Card
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(kColorPrimary), Color(kColorSecondary)],
@@ -147,21 +147,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                 end: Alignment.bottomLeft,
               ),
               borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(kColorPrimary).withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
-                const CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.white24,
-                  child: Icon(Icons.admin_panel_settings, color: Colors.white, size: 32),
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white30, width: 1.5),
+                  ),
+                  child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 30),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('أهلاً بك في لوحة الإدارة', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                      Text('إدارة وتعديل خدمات ومبيعات التطبيق فورياً', style: GoogleFonts.cairo(color: Colors.white70, fontSize: 12)),
+                      Row(
+                        children: [
+                          Text('أهلاً بك في لوحة الإدارة', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.verified_rounded, color: Color(kColorAccent), size: 18),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text('إدارة وتعديل خدمات ومبيعات التطبيق فورياً', style: GoogleFonts.cairo(color: Colors.white.withOpacity(0.85), fontSize: 12)),
                     ],
                   ),
                 ),
