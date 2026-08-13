@@ -254,8 +254,21 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                                 child: user.photoURL == null ? const Icon(Icons.person, size: 45) : null,
                               ),
                               const SizedBox(height: 12),
-                              Text(user.displayName ?? 'مستخدم أولاد رزق', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
+                              Text(user.displayName ?? 'مستخدم نسيم (Naseem)', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
                               Text(user.email ?? '', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                              if (ApiService.isAdmin()) ...[
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.amber[800],
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  onPressed: () => Navigator.pushNamed(context, '/admin'),
+                                  icon: const Icon(Icons.admin_panel_settings),
+                                  label: Text('👑 الدخول إلى لوحة التحكم والإدارة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                                ),
+                              ],
                               const SizedBox(height: 24),
 
                               TextFormField(

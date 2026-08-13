@@ -194,6 +194,148 @@ class ApiService {
     return false;
   }
 
+  // ─── Admin APIs ──────────────────────────────────────────
+  static const List<String> kAdminEmails = [
+    'naseem01099@gmail.com',
+    'alihmdy135@gmail.com',
+  ];
+
+  static bool isAdmin() {
+    final user = AuthService.currentUser;
+    if (user == null || user.email == null) return false;
+    return kAdminEmails.contains(user.email!.toLowerCase().trim());
+  }
+
+  static Future<Map<String, dynamic>?> getAdminStats() async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return null;
+      final response = await http.get(
+        Uri.parse('$kBaseUrl/api/admin/stats'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return data['data'];
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static Future<List<UserBookingModel>> getAllBookingsAdmin() async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return [];
+      final response = await http.get(
+        Uri.parse('$kBaseUrl/api/admin/bookings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return (data['data'] as List).map((e) => UserBookingModel.fromJson(e)).toList();
+        }
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  static Future<bool> updateBookingStatusAdmin(String bookingId, String statusCode) async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return false;
+      final response = await http.put(
+        Uri.parse('$kBaseUrl/api/admin/bookings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'booking_id': bookingId,
+          'status_code': statusCode,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  static Future<bool> createServiceAdmin(Map<String, dynamic> serviceData) async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return false;
+      final response = await http.post(
+        Uri.parse('$kBaseUrl/api/admin/services'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode(serviceData),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  static Future<bool> updateServiceAdmin(Map<String, dynamic> serviceData) async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return false;
+      final response = await http.put(
+        Uri.parse('$kBaseUrl/api/admin/services'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode(serviceData),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  static Future<bool> deleteServiceAdmin(String serviceId) async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return false;
+      final response = await http.delete(
+        Uri.parse('$kBaseUrl/api/admin/services?service_id=$serviceId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   // ─── Fallback Data ────────────────────────────────────────
   static final _fallbackServices = [
     ServiceModel(id:'1', serviceId:'SRV-001', categoryId:'CAT-01', nameAr:'تنظيف مكيف سبليت', shortDescriptionAr:'تنظيف شامل للوحدة الداخلية والخارجية بمواد متخصصة', basePriceSar:120, priceUnit:'للوحدة', warrantyDays:30, slug:'split-ac-cleaning', isFeatured:true),

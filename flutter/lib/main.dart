@@ -13,6 +13,7 @@ import 'screens/about_screen.dart';
 import 'screens/contact_screen.dart';
 import 'screens/faq_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/admin_dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,6 +95,7 @@ class AwladRizkApp extends StatelessWidget {
         '/contact': (_) => const ContactScreen(),
         '/faq': (_) => const FAQScreen(),
         '/profile': (_) => const ProfileScreen(),
+        '/admin': (_) => const AdminDashboardScreen(),
       },
     );
   }

@@ -856,6 +856,12 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('حسابي وطلباتي', style: GoogleFonts.cairo(fontWeight: FontWeight.w700, color: const Color(kColorPrimary))),
             onTap: () { Navigator.pop(context); _navigateTo(context, 'profile'); },
           ),
+          if (ApiService.isAdmin())
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings, color: Colors.amber),
+              title: Text('👑 لوحة الإدارة والتحكم', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.amber[900])),
+              onTap: () { Navigator.pop(context); _navigateTo(context, 'admin'); },
+            ),
           ListTile(
             leading: const Icon(Icons.build_circle_outlined, color: Color(kColorPrimary)),
             title: Text('خدماتنا', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),

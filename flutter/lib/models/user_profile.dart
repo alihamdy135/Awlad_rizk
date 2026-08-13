@@ -75,6 +75,10 @@ class UserBookingModel {
     required this.createdAt,
   });
 
+  String get statusCode => statusId;
+  double get totalAmountSar => estimatedPriceSar;
+  List<String> get serviceNames => [serviceId.isNotEmpty ? serviceId : 'خدمات تكييف وتبريد'];
+
   factory UserBookingModel.fromJson(Map<String, dynamic> json) {
     return UserBookingModel(
       id: json['_id'] ?? '',
@@ -88,11 +92,11 @@ class UserBookingModel {
       slotId: json['slot_id'] ?? '',
       quantity: json['quantity'] ?? 1,
       notes: json['notes'] ?? '',
-      statusId: json['status_id'] ?? 'STAT-01',
-      estimatedPriceSar: (json['estimated_price_sar'] ?? 0).toDouble(),
+      statusId: json['status_id'] ?? json['status_code'] ?? json['status'] ?? 'STAT-01',
+      estimatedPriceSar: (json['estimated_price_sar'] ?? json['total_amount_sar'] ?? json['total_price_sar'] ?? 0).toDouble(),
       rating: json['rating'],
       reviewText: json['review_text'],
-      createdAt: json['created_at'] ?? '',
+      createdAt: json['created_at'] ?? json['createdAt'] ?? '',
     );
   }
 }
