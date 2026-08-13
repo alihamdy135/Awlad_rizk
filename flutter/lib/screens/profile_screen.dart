@@ -258,15 +258,15 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                               Text(user.email ?? '', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                               if (ApiService.isAdmin()) ...[
                                 const SizedBox(height: 12),
-                                ElevatedButton.icon(
+                                ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.amber[800],
+                                    backgroundColor: const Color(kColorPrimary),
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                   ),
                                   onPressed: () => Navigator.pushNamed(context, '/admin'),
-                                  icon: const Icon(Icons.admin_panel_settings),
-                                  label: Text('👑 الدخول إلى لوحة التحكم والإدارة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                                  child: Text('لوحة الإدارة والتحكم', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
                                 ),
                               ],
                               const SizedBox(height: 24),

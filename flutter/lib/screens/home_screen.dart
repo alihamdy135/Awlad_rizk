@@ -804,6 +804,8 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (context, snapshot) {
               final user = snapshot.data;
               if (user != null) {
+                final email = (user.email ?? '').toLowerCase().trim();
+                final isAdmin = ApiService.kAdminEmails.contains(email);
                 return Column(
                   children: [
                     ListTile(
@@ -811,6 +813,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: Text(user.displayName ?? 'مستخدم', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
                       subtitle: Text(user.email ?? '', style: const TextStyle(fontSize: 12)),
                     ),
+                    if (isAdmin)
+                      ListTile(
+                        title: Text('لوحة الإدارة والتحكم', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: const Color(kColorPrimary))),
+                        onTap: () { Navigator.pop(context); _navigateTo(context, 'admin'); },
+                      ),
                     ListTile(
                       leading: const Icon(Icons.logout, color: Colors.red),
                       title: Text('تسجيل الخروج', style: GoogleFonts.cairo(fontWeight: FontWeight.w600, color: Colors.red)),
@@ -856,12 +863,6 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('حسابي وطلباتي', style: GoogleFonts.cairo(fontWeight: FontWeight.w700, color: const Color(kColorPrimary))),
             onTap: () { Navigator.pop(context); _navigateTo(context, 'profile'); },
           ),
-          if (ApiService.isAdmin())
-            ListTile(
-              leading: const Icon(Icons.admin_panel_settings, color: Colors.amber),
-              title: Text('👑 لوحة الإدارة والتحكم', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.amber[900])),
-              onTap: () { Navigator.pop(context); _navigateTo(context, 'admin'); },
-            ),
           ListTile(
             leading: const Icon(Icons.build_circle_outlined, color: Color(kColorPrimary)),
             title: Text('خدماتنا', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
