@@ -1,35 +1,43 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Booking } from '@/models';
-import { auth } from '@/lib/firebase-admin';
+import { verifyOrDecodeToken } from '@/lib/firebase-auth-helper';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 200, headers: corsHeaders });
+}
 
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized: No token provided' }, { status: 401 });
-    }
+    let user_id = '';
+    let customer_email = '';
+    let customer_name = '';
 
-    const token = authHeader.split('Bearer ')[1];
-    let decodedToken;
-    try {
-      if (!auth) {
-        throw new Error('Firebase Admin not configured');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split('Bearer ')[1];
+      try {
+        const decoded = await verifyOrDecodeToken(token);
+        user_id = decoded.uid || '';
+        customer_email = decoded.email || '';
+        customer_name = decoded.name || '';
+      } catch (err) {
+        console.warn('Booking Auth token warning:', err);
       }
-      decodedToken = await auth.verifyIdToken(token);
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      return NextResponse.json({ success: false, error: 'Unauthorized: Invalid token' }, { status: 401 });
     }
 
     await connectToDatabase();
     const BookingModel = Booking();
     const body = await request.json();
 
-    // Force the customer info from the verified token
-    const customer_name = decodedToken.name || body.customer_name;
-    const customer_email = decodedToken.email;
-    const user_id = decodedToken.uid;
+    const final_name = customer_name || body.customer_name || 'عميل';
+    const final_email = customer_email || body.customer_email || '';
 
     // Generate booking ID
     const count = await BookingModel.countDocuments();
@@ -37,19 +45,20 @@ export async function POST(request: Request) {
 
     const booking = new BookingModel({
       ...body,
-      customer_name,
-      customer_email,
-      user_id,
+      customer_name: final_name,
+      customer_email: final_email,
+      user_id: user_id || body.user_id || '',
       booking_id,
       status_id: 'STAT-01',
+      status_code: 'STAT-01',
       created_at: new Date().toISOString(),
     });
 
     await booking.save();
-    return NextResponse.json({ success: true, data: booking, booking_id }, { status: 201 });
+    return NextResponse.json({ success: true, data: booking, booking_id }, { status: 201, headers: corsHeaders });
   } catch (error) {
     console.error('Bookings API Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to create booking' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to create booking' }, { status: 500, headers: corsHeaders });
   }
 }
 
@@ -58,8 +67,8 @@ export async function GET() {
     await connectToDatabase();
     const BookingModel = Booking();
     const bookings = await BookingModel.find({}).sort({ createdAt: -1 }).lean();
-    return NextResponse.json({ success: true, data: bookings });
+    return NextResponse.json({ success: true, data: bookings }, { headers: corsHeaders });
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'Failed to fetch bookings' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch bookings' }, { status: 500, headers: corsHeaders });
   }
 }
