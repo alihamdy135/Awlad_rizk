@@ -1,6 +1,10 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Offer } from '@/models';
+
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -21,3 +25,4 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'Failed to fetch offers' }, { status: 500 });
   }
 }
+

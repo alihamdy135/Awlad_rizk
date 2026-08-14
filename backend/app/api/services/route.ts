@@ -1,6 +1,10 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Service } from '@/models';
+
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
@@ -40,3 +44,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: 'Failed to fetch services' }, { status: 500 });
   }
 }
+
