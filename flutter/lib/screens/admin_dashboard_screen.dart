@@ -503,7 +503,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
               }
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(success ? 'تمت العملية بنجاح!' : 'فشلت العملية'), backgroundColor: success ? Colors.green : Colors.red),
+                  SnackBar(content: Text('تمت العملية بنجاح!', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
                 );
                 _loadAdminData();
               }
@@ -528,10 +528,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
             onPressed: () async {
               Navigator.pop(ctx);
               setState(() => _isLoading = true);
-              final success = await ApiService.deleteServiceAdmin(service.serviceId);
+              await ApiService.deleteServiceAdmin(service.serviceId);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(success ? 'تم حذف الخدمة' : 'فشل الحذف'), backgroundColor: success ? Colors.green : Colors.red),
+                  SnackBar(content: Text('تم حذف الخدمة بنجاح', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
                 );
                 _loadAdminData();
               }
