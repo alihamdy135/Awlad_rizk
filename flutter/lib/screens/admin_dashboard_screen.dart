@@ -223,6 +223,51 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
               _buildStatCard('عدد الخدمات', '$totalServices خدمة', Icons.build, Colors.purple),
             ],
           ),
+
+          const SizedBox(height: 24),
+          Text('إدارة سريعة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(kColorSecondary))),
+          const SizedBox(height: 12),
+          
+          InkWell(
+            onTap: () {
+              Navigator.pushNamed(context, '/admin_availability');
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(kColorPrimary).withOpacity(0.3)),
+                boxShadow: [BoxShadow(color: const Color(kColorPrimary).withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 3))],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(kColorPrimary).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.calendar_month_outlined, color: Color(kColorPrimary)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('إدارة الأوقات (Slots)', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(kColorSecondary))),
+                        Text('تحديد الأوقات المتاحة أو المشغولة', style: GoogleFonts.cairo(color: const Color(kColorTextLight), fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios, size: 16, color: Color(kColorPrimary)),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
         ],
       ),
     );

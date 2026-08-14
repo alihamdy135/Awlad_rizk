@@ -266,6 +266,16 @@ const ContactInfoSchema = new Schema<IContactInfo>({
   label_ar: String,
 }, { collection: 'contact_information', timestamps: true });
 
+// ─── DailyAvailability ─────────────────────────────────────────
+export interface IDailyAvailability extends Document {
+  date: string;
+  blocked_slots: string[];
+}
+const DailyAvailabilitySchema = new Schema<IDailyAvailability>({
+  date: { type: String, required: true, unique: true },
+  blocked_slots: { type: [String], default: [] },
+}, { collection: 'daily_availability', timestamps: true });
+
 // ─── Model Helpers ───────────────────────────────────────────
 function getModel<T extends Document>(name: string, schema: Schema): Model<T> {
   return mongoose.models[name] as Model<T> || mongoose.model<T>(name, schema);
@@ -283,3 +293,4 @@ export const UserProfile = () => getModel<IUserProfile>('UserProfile', UserProfi
 export const SiteSetting = () => getModel<ISiteSetting>('SiteSetting', SiteSettingSchema);
 export const HeroBanner = () => getModel<IHeroBanner>('HeroBanner', HeroBannerSchema);
 export const ContactInfo = () => getModel<IContactInfo>('ContactInfo', ContactInfoSchema);
+export const DailyAvailability = () => getModel<IDailyAvailability>('DailyAvailability', DailyAvailabilitySchema);

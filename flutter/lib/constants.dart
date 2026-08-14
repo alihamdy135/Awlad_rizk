@@ -16,3 +16,14 @@ const int kColorBg = 0xFFFAF3EA;
 const int kColorCardWarm = 0xFFFFFBF5;
 const int kColorBorder = 0xFFE8D9C4;
 const int kColorTextLight = 0xFF7A6355;
+
+final List<Map<String, String>> kTimeSlots = [
+  {'id': 'SLOT-1', 'name': '8:30ص - 10:30ص'},
+  {'id': 'SLOT-2', 'name': '10:30ص - 12:30م'},
+  {'id': 'SLOT-3', 'name': '12:30م - 02:30م'},
+  {'id': 'SLOT-4', 'name': '02:30م - 04:30م'},
+  {'id': 'SLOT-5', 'name': '04:30م - 06:30م'},
+  {'id': 'SLOT-6', 'name': '06:30م - 08:30م'},
+  {'id': 'SLOT-7', 'name': '08:30م - 10:30م'},
+  {'id': 'SLOT-8', 'name': '10:30م - 11:30م'},
+];

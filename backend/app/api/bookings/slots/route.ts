@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
-import { Booking } from '@/models';
+import { Booking, DailyAvailability } from '@/models';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
     const BookingModel = Booking();
+    const DailyAvailabilityModel = DailyAvailability();
     
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date');
@@ -34,6 +35,16 @@ export async function GET(request: NextRequest) {
     }).select('slot_id').lean();
 
     const bookedSlots = bookings.map(b => b.slot_id);
+
+    // Also find any slots the admin explicitly blocked for this date
+    const adminAvailability = await DailyAvailabilityModel.findOne({ date }).lean();
+    if (adminAvailability && adminAvailability.blocked_slots) {
+      for (const slot of adminAvailability.blocked_slots) {
+        if (!bookedSlots.includes(slot)) {
+          bookedSlots.push(slot);
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, data: bookedSlots }, { headers: corsHeaders });
   } catch (error: any) {

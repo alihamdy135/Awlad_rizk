@@ -127,6 +127,50 @@ class ApiService {
     return [];
   }
 
+  static Future<List<String>> getAdminAvailability(String date) async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return [];
+      final response = await http.get(
+        Uri.parse('$kBaseUrl/api/admin/availability?date=$date'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        }
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return List<String>.from(data['data']);
+        }
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  static Future<bool> setAdminAvailability(String date, List<String> blockedSlots) async {
+    try {
+      String? idToken = await AuthService.getIdToken();
+      if (idToken == null) return false;
+      final response = await http.post(
+        Uri.parse('$kBaseUrl/api/admin/availability'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'date': date,
+          'blocked_slots': blockedSlots
+        })
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   // ─── User Profile & Dashboard APIs ───────────────────────────
   static Future<UserProfileModel?> getUserProfile() async {
     try {

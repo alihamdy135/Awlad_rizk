@@ -43,12 +43,6 @@ class _BookingScreenState extends State<BookingScreen> {
     {'id': 'AREA-05', 'name': 'أحياء أخرى'},
   ];
 
-  final List<Map<String, String>> _timeSlots = [
-    {'id': 'SLOT-1', 'name': 'صباحاً (9ص - 12م)'},
-    {'id': 'SLOT-2', 'name': 'ظهراً (12م - 4م)'},
-    {'id': 'SLOT-3', 'name': 'عصراً (4م - 8م)'},
-    {'id': 'SLOT-4', 'name': 'مساءً (8م - 11م)'},
-  ];
 
   @override
   void initState() {
@@ -386,7 +380,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     filled: true,
                     fillColor: Colors.white,
                   ),
-                  items: _timeSlots.map((slot) {
+                  items: kTimeSlots.map((slot) {
                     final isBooked = _bookedSlots.contains(slot['id']);
                     return DropdownMenuItem(
                       value: slot['id'],
