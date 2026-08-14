@@ -113,6 +113,20 @@ class ApiService {
     return 'عذراً، لم أتمكن من الاتصال بالخادم. يرجى المحاولة لاحقاً.';
   }
 
+  // ─── Booking Slots API ──────────────────────────────────────────
+  static Future<List<String>> getBookedSlotsForDate(String date) async {
+    try {
+      final response = await http.get(Uri.parse('$kBaseUrl/api/bookings/slots?date=$date')).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return List<String>.from(data['data']);
+        }
+      }
+    } catch (_) {}
+    return [];
+  }
+
   // ─── User Profile & Dashboard APIs ───────────────────────────
   static Future<UserProfileModel?> getUserProfile() async {
     try {

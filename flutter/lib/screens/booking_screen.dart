@@ -32,6 +32,8 @@ class _BookingScreenState extends State<BookingScreen> {
   List<ServiceModel> _availableServices = [];
   bool _isLoadingServices = false;
   bool _isSubmitting = false;
+  List<String> _bookedSlots = [];
+  bool _isLoadingSlots = false;
 
   final List<Map<String, String>> _areas = [
     {'id': 'AREA-01', 'name': 'حي الروضة'},
@@ -99,9 +101,19 @@ class _BookingScreenState extends State<BookingScreen> {
       },
     );
     if (picked != null) {
+      final formattedDate = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       setState(() {
-        _selectedDate = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+        _selectedDate = formattedDate;
+        _selectedSlotId = null;
+        _isLoadingSlots = true;
       });
+      final booked = await ApiService.getBookedSlotsForDate(formattedDate);
+      if (mounted) {
+        setState(() {
+          _bookedSlots = booked;
+          _isLoadingSlots = false;
+        });
+      }
     }
   }
 
@@ -363,7 +375,9 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                DropdownButtonFormField<String>(
+                _isLoadingSlots 
+                  ? const Center(child: CircularProgressIndicator())
+                  : DropdownButtonFormField<String>(
                   value: _selectedSlotId,
                   decoration: InputDecoration(
                     labelText: 'الوقت المفضّل',
@@ -373,9 +387,11 @@ class _BookingScreenState extends State<BookingScreen> {
                     fillColor: Colors.white,
                   ),
                   items: _timeSlots.map((slot) {
+                    final isBooked = _bookedSlots.contains(slot['id']);
                     return DropdownMenuItem(
                       value: slot['id'],
-                      child: Text(slot['name']!, style: GoogleFonts.cairo()),
+                      enabled: !isBooked,
+                      child: Text(isBooked ? '${slot['name']} (محجوز)' : slot['name']!, style: GoogleFonts.cairo(color: isBooked ? Colors.red : Colors.black)),
                     );
                   }).toList(),
                   onChanged: (v) => setState(() => _selectedSlotId = v),

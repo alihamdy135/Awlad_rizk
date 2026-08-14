@@ -182,24 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: const Color(kColorAccent).withOpacity(0.2),
-                    border: Border.all(color: const Color(kColorAccent).withOpacity(0.4)),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('⭐', style: TextStyle(fontSize: 14)),
-                      const SizedBox(width: 6),
-                      Text('رقم 1 في خدمات التكييف بجدة', style: GoogleFonts.cairo(color: const Color(kColorAccent), fontSize: 13, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
+
                 // Title
                 Text(
                   'مكيفك يستحق\nخدمة احترافية\nبضمان حقيقي',
@@ -731,8 +714,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _navigateTo(BuildContext context, String route) {
-    Navigator.pushNamed(context, '/$route');
+  Future<void> _navigateTo(BuildContext context, String route) async {
+    await Navigator.pushNamed(context, '/$route');
+    if (route == 'admin' && mounted) {
+      _loadData();
+    }
   }
 
   void _showAddReviewDialog() {
