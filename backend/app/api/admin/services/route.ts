@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Service } from '@/models';
 import { verifyAdminToken } from '@/lib/admin-auth-helper';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,11 +12,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, { status: 200, headers: corsHeaders });
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     await verifyAdminToken(request);
 
@@ -27,7 +30,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     await verifyAdminToken(request);
 
@@ -54,14 +57,14 @@ export async function POST(request: Request) {
 
     await newService.save();
 
-    return NextResponse.json({ success: true, data: newService.toObject() }, { headers: corsHeaders });
+    return NextResponse.json({ success: true, data: newService.toObject() }, { status: 201, headers: corsHeaders });
   } catch (error: any) {
     console.error('Admin Create Service Error:', error);
     return NextResponse.json({ success: false, error: error.message || 'Failed to create service' }, { status: 500, headers: corsHeaders });
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
     await verifyAdminToken(request);
 
@@ -91,7 +94,7 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
     await verifyAdminToken(request);
 
