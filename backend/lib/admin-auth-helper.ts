@@ -2,7 +2,6 @@ import { verifyOrDecodeToken } from './firebase-auth-helper';
 
 export const ADMIN_EMAILS = [
   'naseem01099@gmail.com',
-  'alihmdy135@gmail.com',
 ];
 
 export async function verifyAdminToken(request: Request) {

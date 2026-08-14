@@ -197,7 +197,6 @@ class ApiService {
   // ─── Admin APIs ──────────────────────────────────────────
   static const List<String> kAdminEmails = [
     'naseem01099@gmail.com',
-    'alihmdy135@gmail.com',
   ];
 
   static bool isAdmin() {
