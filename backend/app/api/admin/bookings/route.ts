@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Booking } from '@/models';
 import { verifyAdminToken } from '@/lib/admin-auth-helper';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,11 +12,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, { status: 200, headers: corsHeaders });
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     await verifyAdminToken(request);
 
@@ -29,7 +32,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
     await verifyAdminToken(request);
 

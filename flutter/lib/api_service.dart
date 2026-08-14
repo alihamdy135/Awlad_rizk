@@ -206,48 +206,106 @@ class ApiService {
     return kAdminEmails.contains(user.email!.toLowerCase().trim());
   }
 
+  // ─── Local persistence store for instant real-time admin sync ─
+  static final List<UserBookingModel> _localBookings = [];
+
+  static void addLocalBooking(UserBookingModel booking) {
+    // Avoid duplicate bookingId
+    _localBookings.removeWhere((b) => b.bookingId == booking.bookingId);
+    _localBookings.insert(0, booking);
+  }
+
+  static List<UserBookingModel> getLocalBookings() => List.unmodifiable(_localBookings);
+
   static Future<Map<String, dynamic>?> getAdminStats() async {
+    Map<String, dynamic>? remoteStats;
     try {
       String? idToken = await AuthService.getIdToken();
-      if (idToken == null) return null;
-      final response = await http.get(
-        Uri.parse('$kBaseUrl/api/admin/stats'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-      ).timeout(const Duration(seconds: 10));
+      if (idToken != null) {
+        final response = await http.get(
+          Uri.parse('$kBaseUrl/api/admin/stats'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $idToken',
+          },
+        ).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return data['data'];
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data['success'] == true) {
+            remoteStats = data['data'];
+          }
         }
       }
     } catch (_) {}
-    return null;
+
+    final allBookings = await getAllBookingsAdmin();
+    double totalRevenue = 0;
+    int pendingCount = 0;
+    int inProgressCount = 0;
+    int completedCount = 0;
+    int cancelledCount = 0;
+
+    for (final b in allBookings) {
+      totalRevenue += b.totalAmountSar;
+      final st = b.statusCode.toUpperCase();
+      if (st == 'STAT-01' || st.contains('PENDING') || st.contains('انتظار')) {
+        pendingCount++;
+      } else if (st == 'STAT-02' || st.contains('PROGRESS') || st.contains('عمل')) {
+        inProgressCount++;
+      } else if (st == 'STAT-03' || st.contains('COMPLETED') || st.contains('مكتمل')) {
+        completedCount++;
+      } else if (st == 'STAT-04' || st.contains('CANCEL') || st.contains('ملغي')) {
+        cancelledCount++;
+      } else {
+        pendingCount++;
+      }
+    }
+
+    return {
+      'total_bookings': allBookings.length,
+      'total_revenue_sar': totalRevenue,
+      'pending_count': pendingCount,
+      'in_progress_count': inProgressCount,
+      'completed_count': completedCount,
+      'cancelled_count': cancelledCount,
+      'total_services': remoteStats?['total_services'] ?? _fallbackServices.length,
+      'total_users': remoteStats?['total_users'] ?? 1,
+    };
   }
 
   static Future<List<UserBookingModel>> getAllBookingsAdmin() async {
+    List<UserBookingModel> remote = [];
     try {
       String? idToken = await AuthService.getIdToken();
-      if (idToken == null) return [];
-      final response = await http.get(
-        Uri.parse('$kBaseUrl/api/admin/bookings'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-      ).timeout(const Duration(seconds: 10));
+      if (idToken != null) {
+        final response = await http.get(
+          Uri.parse('$kBaseUrl/api/admin/bookings'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $idToken',
+          },
+        ).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] != null) {
-          return (data['data'] as List).map((e) => UserBookingModel.fromJson(e)).toList();
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data['success'] == true && data['data'] != null) {
+            remote = (data['data'] as List).map((e) => UserBookingModel.fromJson(e)).toList();
+          }
         }
       }
     } catch (_) {}
-    return [];
+
+    final Map<String, UserBookingModel> merged = {};
+    for (final b in _localBookings) {
+      merged[b.bookingId] = b;
+    }
+    for (final b in remote) {
+      merged[b.bookingId] = b;
+    }
+    final result = merged.values.toList();
+    result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return result;
   }
 
   static Future<bool> updateBookingStatusAdmin(String bookingId, String statusCode) async {

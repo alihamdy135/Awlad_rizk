@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../constants.dart';
 import '../models.dart';
+import '../models/user_profile.dart';
 import '../services/auth_service.dart';
 import '../api_service.dart';
 
@@ -158,6 +159,24 @@ class _BookingScreenState extends State<BookingScreen> {
       } catch (err) {
         debugPrint('Booking API warning, fallback used: $err');
       }
+
+      final newBooking = UserBookingModel(
+        id: bookingId,
+        bookingId: bookingId,
+        customerName: _customerName,
+        customerPhone: _customerPhone,
+        serviceId: targetService.serviceId,
+        areaId: _selectedAreaId ?? '',
+        addressDetail: _addressDetail,
+        preferredDate: _selectedDate ?? '',
+        slotId: _selectedSlotId ?? '',
+        quantity: _quantity,
+        notes: _notes,
+        statusId: 'STAT-01',
+        estimatedPriceSar: targetService.basePriceSar * _quantity,
+        createdAt: DateTime.now().toIso8601String(),
+      );
+      ApiService.addLocalBooking(newBooking);
 
       if (!mounted) return;
       showDialog(

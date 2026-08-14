@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Booking } from '@/models';
 import { verifyOrDecodeToken } from '@/lib/firebase-auth-helper';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,11 +12,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, { status: 200, headers: corsHeaders });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('Authorization');
     let user_id = '';
@@ -57,17 +60,17 @@ export async function POST(request: Request) {
 
     await booking.save();
     return NextResponse.json({ success: true, data: booking, booking_id }, { status: 201, headers: corsHeaders });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Bookings API Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to create booking' }, { status: 500, headers: corsHeaders });
+    return NextResponse.json({ success: false, error: error.message || 'Failed to create booking' }, { status: 500, headers: corsHeaders });
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
     const BookingModel = Booking();
-    const bookings = await BookingModel.find({}).sort({ createdAt: -1 }).lean();
+    const bookings = await BookingModel.find({}).sort({ _id: -1 }).lean();
     return NextResponse.json({ success: true, data: bookings }, { headers: corsHeaders });
   } catch (error) {
     return NextResponse.json({ success: false, error: 'Failed to fetch bookings' }, { status: 500, headers: corsHeaders });
