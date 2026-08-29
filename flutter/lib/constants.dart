@@ -27,3 +27,46 @@ final List<Map<String, String>> kTimeSlots = [
   {'id': 'SLOT-7', 'name': '08:30م - 10:30م'},
   {'id': 'SLOT-8', 'name': '10:30م - 11:30م'},
 ];
+
+final List<Map<String, dynamic>> kServiceAreas = [
+  // 1. أحياء وسط وشرق جدة
+  {'id': 'HEADER-1', 'name': '── 📍 أحياء وسط وشرق جدة ──', 'isHeader': true},
+  {'id': 'AREA-MARWAH', 'name': 'حي المروة (المركز الرئيسي)', 'category': 'وسط وشرق جدة'},
+  {'id': 'AREA-SAMER', 'name': 'حي السامر', 'category': 'وسط وشرق جدة'},
+  {'id': 'AREA-SAFA', 'name': 'حي الصفا', 'category': 'وسط وشرق جدة'},
+  {'id': 'AREA-RABWAH', 'name': 'حي الربوة', 'category': 'وسط وشرق جدة'},
+  {'id': 'AREA-BAWADI', 'name': 'حي البوادي', 'category': 'وسط وشرق جدة'},
+  {'id': 'AREA-FAISALIYAH', 'name': 'حي الفيصلية', 'category': 'وسط وشرق جدة'},
+  {'id': 'AREA-AZIZIYAH', 'name': 'حي العزيزية', 'category': 'وسط وشرق جدة'},
+  {'id': 'AREA-MUSHREFAH', 'name': 'حي مشرفة', 'category': 'وسط وشرق جدة'},
+  {'id': 'AREA-REHAB', 'name': 'حي الرحاب', 'category': 'وسط وشرق جدة'},
+
+  // 2. أحياء شمال جدة
+  {'id': 'HEADER-2', 'name': '── 📍 أحياء شمال جدة ──', 'isHeader': true},
+  {'id': 'AREA-NAEEM', 'name': 'حي النعيم', 'category': 'شمال جدة'},
+  {'id': 'AREA-NAHDAH', 'name': 'حي النهضة', 'category': 'شمال جدة'},
+  {'id': 'AREA-NUZHAH', 'name': 'حي النزهة', 'category': 'شمال جدة'},
+  {'id': 'AREA-SALAMAH', 'name': 'حي السلامة', 'category': 'شمال جدة'},
+  {'id': 'AREA-ZAHRA', 'name': 'حي الزهراء', 'category': 'شمال جدة'},
+  {'id': 'AREA-RAWDAH', 'name': 'حي الروضة', 'category': 'شمال جدة'},
+  {'id': 'AREA-MUHAMMADIYAH', 'name': 'حي المحمدية', 'category': 'شمال جدة'},
+  {'id': 'AREA-SHATI', 'name': 'حي الشاطئ', 'category': 'شمال جدة'},
+  {'id': 'AREA-OBHUR-SOUTH', 'name': 'حي أبحر الجنوبية', 'category': 'شمال جدة'},
+
+  // 3. أحياء جنوب جدة
+  {'id': 'HEADER-3', 'name': '── 📍 أحياء جنوب جدة ──', 'isHeader': true},
+  {'id': 'AREA-NASEEM', 'name': 'حي النسيم', 'category': 'جنوب جدة'},
+  {'id': 'AREA-BANI-MALIK', 'name': 'حي بني مالك', 'category': 'جنوب جدة'},
+  {'id': 'AREA-WUROOD', 'name': 'حي الورود', 'category': 'جنوب جدة'},
+  {'id': 'AREA-FAYHA', 'name': 'حي الفيحاء', 'category': 'جنوب جدة'},
+  {'id': 'AREA-SULAIMANIYAH', 'name': 'حي السليمانية', 'category': 'جنوب جدة'},
+  {'id': 'AREA-THAGHR', 'name': 'حي الثغر', 'category': 'جنوب جدة'},
+  {'id': 'AREA-JAMEAH', 'name': 'حي الجامعة', 'category': 'جنوب جدة'},
+  {'id': 'AREA-RUWAIS', 'name': 'حي الرويس', 'category': 'جنوب جدة'},
+  {'id': 'AREA-HAMRA', 'name': 'حي الحمراء', 'category': 'جنوب جدة'},
+  {'id': 'AREA-SHARAFYAH', 'name': 'حي الشرفية', 'category': 'جنوب جدة'},
+
+  // 4. خيارات أخرى
+  {'id': 'HEADER-4', 'name': '── 📍 مناطق أخرى ──', 'isHeader': true},
+  {'id': 'AREA-OTHER', 'name': 'حي آخر في جدة', 'category': 'أخرى'},
+];

@@ -35,13 +35,7 @@ class _BookingScreenState extends State<BookingScreen> {
   List<String> _bookedSlots = [];
   bool _isLoadingSlots = false;
 
-  final List<Map<String, String>> _areas = [
-    {'id': 'AREA-01', 'name': 'حي الروضة'},
-    {'id': 'AREA-02', 'name': 'حي الصفا'},
-    {'id': 'AREA-03', 'name': 'حي النزهة'},
-    {'id': 'AREA-04', 'name': 'حي الخالدية'},
-    {'id': 'AREA-05', 'name': 'أحياء أخرى'},
-  ];
+
 
 
   @override
@@ -326,20 +320,34 @@ class _BookingScreenState extends State<BookingScreen> {
                 DropdownButtonFormField<String>(
                   value: _selectedAreaId,
                   decoration: InputDecoration(
-                    labelText: 'الحي',
+                    labelText: 'اختر الحي بجدة',
                     prefixIcon: const Icon(Icons.location_city_outlined, color: Color(kColorPrimary)),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                     filled: true,
                     fillColor: Colors.white,
                   ),
-                  items: _areas.map((area) {
-                    return DropdownMenuItem(
-                      value: area['id'],
-                      child: Text(area['name']!, style: GoogleFonts.cairo()),
+                  isExpanded: true,
+                  items: kServiceAreas.map((area) {
+                    final bool isHeader = area['isHeader'] == true;
+                    return DropdownMenuItem<String>(
+                      value: area['id'] as String,
+                      enabled: !isHeader,
+                      child: Text(
+                        area['name'] as String,
+                        style: GoogleFonts.cairo(
+                          fontWeight: isHeader ? FontWeight.bold : FontWeight.w600,
+                          color: isHeader ? const Color(kColorPrimary) : Colors.black87,
+                          fontSize: isHeader ? 13 : 14,
+                        ),
+                      ),
                     );
                   }).toList(),
-                  onChanged: (v) => setState(() => _selectedAreaId = v),
-                  validator: (v) => v == null ? 'الرجاء اختيار الحي' : null,
+                  onChanged: (v) {
+                    if (v != null && !v.startsWith('HEADER-')) {
+                      setState(() => _selectedAreaId = v);
+                    }
+                  },
+                  validator: (v) => (v == null || v.startsWith('HEADER-')) ? 'الرجاء اختيار الحي' : null,
                 ),
                 const SizedBox(height: 16),
 
