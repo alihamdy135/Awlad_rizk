@@ -93,8 +93,32 @@ class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
     }
   }
 
+String _arabicMonthName(int month) {
+  const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  return months[(month - 1) % 12];
+}
+
+String _arabicDayName(int weekday) {
+  const days = {
+    1: 'الإثنين',
+    2: 'الثلاثاء',
+    3: 'الأربعاء',
+    4: 'الخميس',
+    5: 'الجمعة',
+    6: 'السبت',
+    7: 'الأحد',
+  };
+  return days[weekday] ?? '';
+}
+
   @override
   Widget build(BuildContext context) {
+    final y = _selectedDate.year;
+    final m = _selectedDate.month.toString().padLeft(2, '0');
+    final d = _selectedDate.day.toString().padLeft(2, '0');
+    final dayName = _arabicDayName(_selectedDate.weekday);
+    final dateDisplay = '$y-$m-$d ($dayName)';
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -116,7 +140,7 @@ class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'التاريخ: ${DateFormat('yyyy-MM-dd (EEEE)', 'ar').format(_selectedDate)}',
+                      'التاريخ: $dateDisplay',
                       style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(kColorSecondary)),
                     ),
                   ),
@@ -155,7 +179,7 @@ class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
                       _loadAvailability();
                     },
                     child: Container(
-                      width: 70,
+                      width: 75,
                       margin: EdgeInsets.only(
                         right: index == 0 ? 16 : 8,
                         left: index == _upcomingDays.length - 1 ? 16 : 0,
@@ -171,24 +195,24 @@ class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            DateFormat('MMM', 'ar').format(date),
+                            _arabicMonthName(date.month),
                             style: GoogleFonts.cairo(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: isSelected ? Colors.white : const Color(kColorTextLight),
                             ),
                           ),
                           Text(
                             date.day.toString(),
                             style: GoogleFonts.cairo(
-                              fontSize: 22,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: isSelected ? Colors.white : const Color(kColorSecondary),
                             ),
                           ),
                           Text(
-                            DateFormat('E', 'ar').format(date),
+                            _arabicDayName(date.weekday),
                             style: GoogleFonts.cairo(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: isSelected ? Colors.white : const Color(kColorTextLight),
                             ),
                           ),
