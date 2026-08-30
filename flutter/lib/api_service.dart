@@ -8,26 +8,28 @@ import 'services/auth_service.dart';
 class ApiService {
   static const _headers = {'Content-Type': 'application/json'};
 
-  static final List<ServiceModel> _localServices = List.from(_fallbackServices);
+  static Future<Map<String, String>> _authHeaders() async {
+    final Map<String, String> h = {'Content-Type': 'application/json'};
+    final idToken = await AuthService.getIdToken();
+    if (idToken != null) h['Authorization'] = 'Bearer ';
+    return h;
+  }
 
   static Future<List<ServiceModel>> getServices({bool featured = false, String? categoryId}) async {
     try {
-      String url = '$kBaseUrl/api/services?';
+      String url = '\/api/services?nocache=\&';
       if (featured) url += 'featured=true&';
-      if (categoryId != null && categoryId.isNotEmpty) url += 'category=$categoryId&';
-      
-      final response = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 10));
+      if (categoryId != null && categoryId.isNotEmpty) url += 'category=\&';
+      final response = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
-          final remoteList = (data['data'] as List).map((e) => ServiceModel.fromJson(e)).toList();
-          _localServices.clear();
-          _localServices.addAll(remoteList);
+          final list = (data['data'] as List).map((e) => ServiceModel.fromJson(e)).toList();
+          if (list.isNotEmpty) return list;
         }
       }
     } catch (_) {}
-
-    var results = List<ServiceModel>.from(_localServices.isNotEmpty ? _localServices : _fallbackServices);
+    var results = List<ServiceModel>.from(_fallbackServices);
     if (featured) results = results.where((s) => s.isFeatured).toList();
     if (categoryId != null && categoryId.isNotEmpty) results = results.where((s) => s.categoryId == categoryId).toList();
     return results;
@@ -35,11 +37,12 @@ class ApiService {
 
   static Future<List<CategoryModel>> getCategories() async {
     try {
-      final response = await http.get(Uri.parse('$kBaseUrl/api/categories'), headers: _headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse('\/api/categories?nocache='), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return (data['data'] as List).map((e) => CategoryModel.fromJson(e)).toList();
+        if (data['success'] == true && data['data'] != null) {
+          final list = (data['data'] as List).map((e) => CategoryModel.fromJson(e)).toList();
+          if (list.isNotEmpty) return list;
         }
       }
     } catch (_) {}
@@ -48,40 +51,34 @@ class ApiService {
 
   static Future<List<TestimonialModel>> getTestimonials() async {
     try {
-      final response = await http.get(Uri.parse('$kBaseUrl/api/testimonials'), headers: _headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse('\/api/testimonials?nocache='), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
+        if (data['success'] == true && data['data'] != null) {
           return (data['data'] as List).map((e) => TestimonialModel.fromJson(e)).toList();
         }
       }
     } catch (_) {}
-    return _fallbackTestimonials;
+    return [];
   }
 
   static Future<Map<String, dynamic>> getStats() async {
     try {
-      final response = await http.get(Uri.parse('$kBaseUrl/api/stats'), headers: _headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse('\/api/stats?nocache='), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return data['data'];
-        }
+        if (data['success'] == true) return data['data'];
       }
     } catch (_) {}
-    // Fallback if backend is unavailable (set to 0 to show "Pending")
-    return {
-      'total_satisfied_customers': 0,
-      'average_rating': 0.0,
-    };
+    return {'total_satisfied_customers': 0, 'average_rating': 0.0};
   }
 
   static Future<List<FAQModel>> getFAQs({int? limit}) async {
     try {
-      final response = await http.get(Uri.parse('$kBaseUrl/api/faq?limit=$limit'), headers: _headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse('\/api/faq?limit=\&nocache='), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
+        if (data['success'] == true && data['data'] != null) {
           return (data['data'] as List).map((e) => FAQModel.fromJson(e)).toList();
         }
       }
@@ -91,31 +88,21 @@ class ApiService {
 
   static Future<String> sendChatMessage(String message) async {
     try {
-      final response = await http.post(
-        Uri.parse('$kBaseUrl/api/chat'),
-        headers: _headers,
-        body: jsonEncode({'message': message}),
-      ).timeout(const Duration(seconds: 15));
-      
+      final response = await http.post(Uri.parse('\/api/chat'), headers: _headers, body: jsonEncode({'message': message})).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return data['data'];
-        }
+        if (data['success'] == true) return data['data'];
       }
     } catch (_) {}
     return 'عذراً، لم أتمكن من الاتصال بالخادم. يرجى المحاولة لاحقاً.';
   }
 
-  // ─── Booking Slots API ──────────────────────────────────────────
   static Future<List<String>> getBookedSlotsForDate(String date) async {
     try {
-      final response = await http.get(Uri.parse('$kBaseUrl/api/bookings/slots?date=$date')).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse('\/api/bookings/slots?date=\&nocache=')).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] != null) {
-          return List<String>.from(data['data']);
-        }
+        if (data['success'] == true && data['data'] != null) return List<String>.from(data['data']);
       }
     } catch (_) {}
     return [];
@@ -123,20 +110,11 @@ class ApiService {
 
   static Future<List<String>> getAdminAvailability(String date) async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      if (idToken == null) return [];
-      final response = await http.get(
-        Uri.parse('$kBaseUrl/api/admin/availability?date=$date'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        }
-      ).timeout(const Duration(seconds: 10));
+      final headers = await _authHeaders();
+      final response = await http.get(Uri.parse('\/api/admin/availability?date=\&nocache='), headers: headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] != null) {
-          return List<String>.from(data['data']);
-        }
+        if (data['success'] == true && data['data'] != null) return List<String>.from(data['data']);
       }
     } catch (_) {}
     return [];
@@ -144,19 +122,8 @@ class ApiService {
 
   static Future<bool> setAdminAvailability(String date, List<String> blockedSlots) async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      if (idToken == null) return false;
-      final response = await http.post(
-        Uri.parse('$kBaseUrl/api/admin/availability'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        body: jsonEncode({
-          'date': date,
-          'blocked_slots': blockedSlots
-        })
-      ).timeout(const Duration(seconds: 10));
+      final headers = await _authHeaders();
+      final response = await http.post(Uri.parse('\/api/admin/availability'), headers: headers, body: jsonEncode({'date': date, 'blocked_slots': blockedSlots})).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
@@ -165,24 +132,14 @@ class ApiService {
     return false;
   }
 
-  // ─── User Profile & Dashboard APIs ───────────────────────────
   static Future<UserProfileModel?> getUserProfile() async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      if (idToken == null) return null;
-      final response = await http.get(
-        Uri.parse('$kBaseUrl/api/user/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-      ).timeout(const Duration(seconds: 10));
-
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return null;
+      final response = await http.get(Uri.parse('\/api/user/profile?nocache='), headers: headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] != null) {
-          return UserProfileModel.fromJson(data['data']);
-        }
+        if (data['success'] == true && data['data'] != null) return UserProfileModel.fromJson(data['data']);
       }
     } catch (_) {}
     return null;
@@ -190,17 +147,9 @@ class ApiService {
 
   static Future<bool> updateUserProfile(UserProfileModel profile) async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      if (idToken == null) return false;
-      final response = await http.put(
-        Uri.parse('$kBaseUrl/api/user/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        body: jsonEncode(profile.toJson()),
-      ).timeout(const Duration(seconds: 10));
-
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return false;
+      final response = await http.put(Uri.parse('\/api/user/profile'), headers: headers, body: jsonEncode(profile.toJson())).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
@@ -211,16 +160,9 @@ class ApiService {
 
   static Future<List<UserBookingModel>> getUserBookings() async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      if (idToken == null) return [];
-      final response = await http.get(
-        Uri.parse('$kBaseUrl/api/user/bookings'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-      ).timeout(const Duration(seconds: 10));
-
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return [];
+      final response = await http.get(Uri.parse('\/api/user/bookings?nocache='), headers: headers).timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
@@ -233,21 +175,9 @@ class ApiService {
 
   static Future<bool> rateBooking(String bookingId, int rating, String reviewText) async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      if (idToken == null) return false;
-      final response = await http.post(
-        Uri.parse('$kBaseUrl/api/user/bookings'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        body: jsonEncode({
-          'booking_id': bookingId,
-          'rating': rating,
-          'review_text': reviewText,
-        }),
-      ).timeout(const Duration(seconds: 10));
-
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return false;
+      final response = await http.post(Uri.parse('\/api/user/bookings'), headers: headers, body: jsonEncode({'booking_id': bookingId, 'rating': rating, 'review_text': reviewText})).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
@@ -256,10 +186,7 @@ class ApiService {
     return false;
   }
 
-  // ─── Admin APIs ──────────────────────────────────────────
-  static const List<String> kAdminEmails = [
-    'naseem01099@gmail.com',
-  ];
+  static const List<String> kAdminEmails = ['naseem01099@gmail.com'];
 
   static bool isAdmin() {
     final user = AuthService.currentUser;
@@ -267,195 +194,105 @@ class ApiService {
     return kAdminEmails.contains(user.email!.toLowerCase().trim());
   }
 
-  // ─── Local persistence store for instant real-time admin sync ─
-  static final List<UserBookingModel> _localBookings = [];
-
-  static void addLocalBooking(UserBookingModel booking) {
-    // Avoid duplicate bookingId
-    _localBookings.removeWhere((b) => b.bookingId == booking.bookingId);
-    _localBookings.insert(0, booking);
-  }
-
-  static List<UserBookingModel> getLocalBookings() => List.unmodifiable(_localBookings);
-
-  static Future<Map<String, dynamic>?> getAdminStats() async {
-    Map<String, dynamic>? remoteStats;
+  static Future<List<UserBookingModel>> getAllBookingsAdmin() async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      if (idToken != null) {
-        final response = await http.get(
-          Uri.parse('$kBaseUrl/api/admin/stats'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $idToken',
-          },
-        ).timeout(const Duration(seconds: 10));
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          if (data['success'] == true) {
-            remoteStats = data['data'];
-          }
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return [];
+      final response = await http.get(Uri.parse('\/api/admin/bookings?nocache='), headers: headers).timeout(const Duration(seconds: 12));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final list = (data['data'] as List).map((e) => UserBookingModel.fromJson(e)).toList();
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
         }
       }
     } catch (_) {}
+    return [];
+  }
 
+  static Future<Map<String, dynamic>?> getAdminStats() async {
     final allBookings = await getAllBookingsAdmin();
     double totalRevenue = 0;
-    int pendingCount = 0;
-    int inProgressCount = 0;
-    int completedCount = 0;
-    int cancelledCount = 0;
-
+    int pendingCount = 0, inProgressCount = 0, completedCount = 0, cancelledCount = 0;
     for (final b in allBookings) {
       totalRevenue += b.totalAmountSar;
       final st = b.statusCode.toUpperCase();
-      if (st == 'STAT-01' || st.contains('PENDING') || st.contains('انتظار')) {
-        pendingCount++;
-      } else if (st == 'STAT-02' || st.contains('PROGRESS') || st.contains('عمل')) {
-        inProgressCount++;
-      } else if (st == 'STAT-03' || st.contains('COMPLETED') || st.contains('مكتمل')) {
-        completedCount++;
-      } else if (st == 'STAT-04' || st.contains('CANCEL') || st.contains('ملغي')) {
-        cancelledCount++;
-      } else {
-        pendingCount++;
-      }
+      if (st == 'STAT-01') pendingCount++;
+      else if (st == 'STAT-02') inProgressCount++;
+      else if (st == 'STAT-03') completedCount++;
+      else if (st == 'STAT-04') cancelledCount++;
+      else pendingCount++;
     }
-
-    return {
-      'total_bookings': allBookings.length,
-      'total_revenue_sar': totalRevenue,
-      'pending_count': pendingCount,
-      'in_progress_count': inProgressCount,
-      'completed_count': completedCount,
-      'cancelled_count': cancelledCount,
-      'total_services': remoteStats?['total_services'] ?? _fallbackServices.length,
-      'total_users': remoteStats?['total_users'] ?? 1,
-    };
-  }
-
-  static Future<List<UserBookingModel>> getAllBookingsAdmin() async {
-    List<UserBookingModel> remote = [];
+    int totalServices = 6;
     try {
-      String? idToken = await AuthService.getIdToken();
-      if (idToken != null) {
-        final response = await http.get(
-          Uri.parse('$kBaseUrl/api/admin/bookings'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $idToken',
-          },
-        ).timeout(const Duration(seconds: 10));
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          if (data['success'] == true && data['data'] != null) {
-            remote = (data['data'] as List).map((e) => UserBookingModel.fromJson(e)).toList();
-          }
+      final headers = await _authHeaders();
+      if (headers.containsKey('Authorization')) {
+        final resp = await http.get(Uri.parse('\/api/admin/stats?nocache='), headers: headers).timeout(const Duration(seconds: 10));
+        if (resp.statusCode == 200) {
+          final d = jsonDecode(resp.body);
+          if (d['success'] == true) totalServices = d['data']['total_services'] ?? totalServices;
         }
       }
     } catch (_) {}
-
-    final Map<String, UserBookingModel> merged = {};
-    for (final b in _localBookings) {
-      merged[b.bookingId] = b;
-    }
-    for (final b in remote) {
-      merged[b.bookingId] = b;
-    }
-    final result = merged.values.toList();
-    result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return result;
+    return {'total_bookings': allBookings.length, 'total_revenue_sar': totalRevenue, 'pending_count': pendingCount, 'in_progress_count': inProgressCount, 'completed_count': completedCount, 'cancelled_count': cancelledCount, 'total_services': totalServices, 'total_users': 1};
   }
 
   static Future<bool> updateBookingStatusAdmin(String bookingId, String statusCode) async {
-    final index = _localBookings.indexWhere((b) => b.bookingId == bookingId);
-    if (index != -1) {
-      final old = _localBookings[index];
-      _localBookings[index] = UserBookingModel(
-        id: old.id,
-        bookingId: old.bookingId,
-        customerName: old.customerName,
-        customerPhone: old.customerPhone,
-        serviceId: old.serviceId,
-        areaId: old.areaId,
-        addressDetail: old.addressDetail,
-        preferredDate: old.preferredDate,
-        slotId: old.slotId,
-        quantity: old.quantity,
-        notes: old.notes,
-        statusId: statusCode,
-        estimatedPriceSar: old.estimatedPriceSar,
-        createdAt: old.createdAt,
-      );
-    }
-
     try {
-      String? idToken = await AuthService.getIdToken();
-      Map<String, String> headers = {'Content-Type': 'application/json'};
-      if (idToken != null) headers['Authorization'] = 'Bearer $idToken';
-      await http.put(
-        Uri.parse('$kBaseUrl/api/admin/bookings'),
-        headers: headers,
-        body: jsonEncode({
-          'booking_id': bookingId,
-          'status_code': statusCode,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return false;
+      final response = await http.put(Uri.parse('\/api/admin/bookings'), headers: headers, body: jsonEncode({'booking_id': bookingId, 'status_code': statusCode})).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
     } catch (_) {}
-
-    return true;
+    return false;
   }
 
   static Future<bool> createServiceAdmin(Map<String, dynamic> serviceData) async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      Map<String, String> headers = {'Content-Type': 'application/json'};
-      if (idToken != null) headers['Authorization'] = 'Bearer $idToken';
-      await http.post(
-        Uri.parse('$kBaseUrl/api/admin/services'),
-        headers: headers,
-        body: jsonEncode(serviceData),
-      ).timeout(const Duration(seconds: 10));
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return false;
+      final response = await http.post(Uri.parse('\/api/admin/services'), headers: headers, body: jsonEncode(serviceData)).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
     } catch (_) {}
-
-    await getServices();
-    return true;
+    return false;
   }
 
   static Future<bool> updateServiceAdmin(Map<String, dynamic> serviceData) async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      Map<String, String> headers = {'Content-Type': 'application/json'};
-      if (idToken != null) headers['Authorization'] = 'Bearer $idToken';
-      await http.put(
-        Uri.parse('$kBaseUrl/api/admin/services'),
-        headers: headers,
-        body: jsonEncode(serviceData),
-      ).timeout(const Duration(seconds: 10));
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return false;
+      final response = await http.put(Uri.parse('\/api/admin/services'), headers: headers, body: jsonEncode(serviceData)).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
     } catch (_) {}
-
-    await getServices();
-    return true;
+    return false;
   }
 
   static Future<bool> deleteServiceAdmin(String serviceId) async {
     try {
-      String? idToken = await AuthService.getIdToken();
-      Map<String, String> headers = {'Content-Type': 'application/json'};
-      if (idToken != null) headers['Authorization'] = 'Bearer $idToken';
-      await http.delete(
-        Uri.parse('$kBaseUrl/api/admin/services?service_id=$serviceId'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return false;
+      final response = await http.delete(Uri.parse('\/api/admin/services?service_id='), headers: headers).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
     } catch (_) {}
-
-    await getServices();
-    return true;
+    return false;
   }
 
-  // ─── Fallback Data ────────────────────────────────────────
+  static void addLocalBooking(UserBookingModel booking) {}
+  static List<UserBookingModel> getLocalBookings() => [];
+
   static final _fallbackServices = [
     ServiceModel(id:'1', serviceId:'SRV-001', categoryId:'CAT-01', nameAr:'تنظيف مكيف سبليت', shortDescriptionAr:'تنظيف شامل للوحدة الداخلية والخارجية بمواد متخصصة', basePriceSar:120, priceUnit:'للوحدة', warrantyDays:30, slug:'split-ac-cleaning', isFeatured:true),
     ServiceModel(id:'2', serviceId:'SRV-002', categoryId:'CAT-02', nameAr:'صيانة وإصلاح مكيفات', shortDescriptionAr:'تشخيص وإصلاح جميع أعطال المكيفات بضمان كامل', basePriceSar:200, priceUnit:'للزيارة', warrantyDays:30, slug:'ac-repair', isFeatured:true),
@@ -471,7 +308,6 @@ class ApiService {
     CategoryModel(id:'4', categoryId:'CAT-04', nameAr:'لحام', iconName:'🔥'),
     CategoryModel(id:'5', categoryId:'CAT-05', nameAr:'عقود', iconName:'📋'),
   ];
-  static final List<TestimonialModel> _fallbackTestimonials = [];
   static final _fallbackFAQs = [
     FAQModel(id:'1', questionAr:'متى يتم الدفع؟', answerAr:'الدفع بعد إتمام الخدمة بالكامل وتأكدك من جودة العمل.'),
     FAQModel(id:'2', questionAr:'ما هي مدة الضمان؟', answerAr:'ضمان 30 يوماً على الأقل لجميع خدماتنا.'),
