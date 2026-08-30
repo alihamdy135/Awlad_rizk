@@ -15,7 +15,7 @@ export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, { status: 200, headers: corsHeaders });
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
     const FAQModel = FAQ();

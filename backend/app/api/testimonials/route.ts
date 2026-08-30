@@ -16,7 +16,7 @@ export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, { status: 200, headers: corsHeaders });
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
     const TestimonialModel = Testimonial();
@@ -28,7 +28,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     await connectToDatabase();
     const TestimonialModel = Testimonial();
