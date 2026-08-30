@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { Service, Category, FAQ } from '../models';
 
 const DEFAULT_MONGODB_URI = 'mongodb+srv://allure_admin:AliHatabME_3625@cluster0.86pho5i.mongodb.net/?appName=Cluster0';
 const MONGODB_URI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
@@ -47,8 +48,6 @@ export async function connectToDatabase() {
 
 async function seedInitialData() {
   try {
-    const { Service, Category, FAQ } = require('@/models');
-    
     const ServiceModel = Service();
     const serviceCount = await ServiceModel.countDocuments();
     if (serviceCount === 0) {
