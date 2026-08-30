@@ -28,29 +28,11 @@ export async function GET(request: NextRequest) {
     if (featured === 'true') query.is_featured = true;
     if (category) query.category_id = category;
 
-    let services = [];
-    if (featured === 'true') {
-      services = await ServiceModel.aggregate([
-        { $match: query },
-        {
-          $lookup: {
-            from: 'bookings',
-            localField: 'service_id',
-            foreignField: 'service_id',
-            as: 'bookings'
-          }
-        },
-        { $addFields: { bookingsCount: { $size: "$bookings" } } },
-        { $sort: { bookingsCount: -1, name_ar: 1 } },
-        { $project: { bookings: 0 } }
-      ]);
-    } else {
-      services = await ServiceModel.find(query).sort({ display_order: 1 }).lean();
-    }
+    const services = await ServiceModel.find(query).sort({ display_order: 1 }).lean();
     
     return NextResponse.json({ success: true, data: services }, { headers: corsHeaders });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Services API Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to fetch services' }, { status: 500, headers: corsHeaders });
+    return NextResponse.json({ success: false, error: error?.message || 'Failed to fetch services' }, { status: 500, headers: corsHeaders });
   }
 }

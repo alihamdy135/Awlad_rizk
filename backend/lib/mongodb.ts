@@ -37,7 +37,7 @@ export async function connectToDatabase() {
 
   try {
     cached.conn = await cached.promise;
-    await seedInitialData();
+    seedInitialData().catch(err => console.error('Seed error:', err));
   } catch (e) {
     cached.promise = null;
     throw e;
