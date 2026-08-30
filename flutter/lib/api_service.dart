@@ -11,15 +11,15 @@ class ApiService {
   static Future<Map<String, String>> _authHeaders() async {
     final Map<String, String> h = {'Content-Type': 'application/json'};
     final idToken = await AuthService.getIdToken();
-    if (idToken != null) h['Authorization'] = 'Bearer ';
+    if (idToken != null) h['Authorization'] = 'Bearer ' + idToken;
     return h;
   }
 
   static Future<List<ServiceModel>> getServices({bool featured = false, String? categoryId}) async {
     try {
-      String url = '\/api/services?nocache=\&';
+      String url = kBaseUrl + '/api/services?nocache=' + DateTime.now().millisecondsSinceEpoch.toString() + '&';
       if (featured) url += 'featured=true&';
-      if (categoryId != null && categoryId.isNotEmpty) url += 'category=\&';
+      if (categoryId != null && categoryId.isNotEmpty) url += 'category=' + categoryId + '&';
       final response = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -37,7 +37,7 @@ class ApiService {
 
   static Future<List<CategoryModel>> getCategories() async {
     try {
-      final response = await http.get(Uri.parse('\/api/categories?nocache='), headers: _headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(kBaseUrl + '/api/categories?nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
@@ -51,7 +51,7 @@ class ApiService {
 
   static Future<List<TestimonialModel>> getTestimonials() async {
     try {
-      final response = await http.get(Uri.parse('\/api/testimonials?nocache='), headers: _headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(kBaseUrl + '/api/testimonials?nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
@@ -64,7 +64,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getStats() async {
     try {
-      final response = await http.get(Uri.parse('\/api/stats?nocache='), headers: _headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(kBaseUrl + '/api/stats?nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) return data['data'];
@@ -75,7 +75,7 @@ class ApiService {
 
   static Future<List<FAQModel>> getFAQs({int? limit}) async {
     try {
-      final response = await http.get(Uri.parse('\/api/faq?limit=\&nocache='), headers: _headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(kBaseUrl + '/api/faq?limit=' + (limit?.toString() ?? '') + '&nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
@@ -88,7 +88,7 @@ class ApiService {
 
   static Future<String> sendChatMessage(String message) async {
     try {
-      final response = await http.post(Uri.parse('\/api/chat'), headers: _headers, body: jsonEncode({'message': message})).timeout(const Duration(seconds: 15));
+      final response = await http.post(Uri.parse(kBaseUrl + '/api/chat'), headers: _headers, body: jsonEncode({'message': message})).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) return data['data'];
@@ -99,7 +99,7 @@ class ApiService {
 
   static Future<List<String>> getBookedSlotsForDate(String date) async {
     try {
-      final response = await http.get(Uri.parse('\/api/bookings/slots?date=\&nocache=')).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(kBaseUrl + '/api/bookings/slots?date=' + date + '&nocache=' + DateTime.now().millisecondsSinceEpoch.toString())).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) return List<String>.from(data['data']);
@@ -111,7 +111,7 @@ class ApiService {
   static Future<List<String>> getAdminAvailability(String date) async {
     try {
       final headers = await _authHeaders();
-      final response = await http.get(Uri.parse('\/api/admin/availability?date=\&nocache='), headers: headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(kBaseUrl + '/api/admin/availability?date=' + date + '&nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) return List<String>.from(data['data']);
@@ -123,7 +123,7 @@ class ApiService {
   static Future<bool> setAdminAvailability(String date, List<String> blockedSlots) async {
     try {
       final headers = await _authHeaders();
-      final response = await http.post(Uri.parse('\/api/admin/availability'), headers: headers, body: jsonEncode({'date': date, 'blocked_slots': blockedSlots})).timeout(const Duration(seconds: 10));
+      final response = await http.post(Uri.parse(kBaseUrl + '/api/admin/availability'), headers: headers, body: jsonEncode({'date': date, 'blocked_slots': blockedSlots})).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
@@ -136,7 +136,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return null;
-      final response = await http.get(Uri.parse('\/api/user/profile?nocache='), headers: headers).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(kBaseUrl + '/api/user/profile?nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) return UserProfileModel.fromJson(data['data']);
@@ -149,7 +149,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return false;
-      final response = await http.put(Uri.parse('\/api/user/profile'), headers: headers, body: jsonEncode(profile.toJson())).timeout(const Duration(seconds: 10));
+      final response = await http.put(Uri.parse(kBaseUrl + '/api/user/profile'), headers: headers, body: jsonEncode(profile.toJson())).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
@@ -162,7 +162,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return [];
-      final response = await http.get(Uri.parse('\/api/user/bookings?nocache='), headers: headers).timeout(const Duration(seconds: 12));
+      final response = await http.get(Uri.parse(kBaseUrl + '/api/user/bookings?nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: headers).timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
@@ -177,7 +177,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return false;
-      final response = await http.post(Uri.parse('\/api/user/bookings'), headers: headers, body: jsonEncode({'booking_id': bookingId, 'rating': rating, 'review_text': reviewText})).timeout(const Duration(seconds: 10));
+      final response = await http.post(Uri.parse(kBaseUrl + '/api/user/bookings'), headers: headers, body: jsonEncode({'booking_id': bookingId, 'rating': rating, 'review_text': reviewText})).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
@@ -202,7 +202,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return [];
-      final response = await http.get(Uri.parse('\/api/admin/bookings?nocache='), headers: headers).timeout(const Duration(seconds: 12));
+      final response = await http.get(Uri.parse(kBaseUrl + '/api/admin/bookings?nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: headers).timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
@@ -232,7 +232,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (headers.containsKey('Authorization')) {
-        final resp = await http.get(Uri.parse('\/api/admin/stats?nocache='), headers: headers).timeout(const Duration(seconds: 10));
+        final resp = await http.get(Uri.parse(kBaseUrl + '/api/admin/stats?nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: headers).timeout(const Duration(seconds: 10));
         if (resp.statusCode == 200) {
           final d = jsonDecode(resp.body);
           if (d['success'] == true) totalServices = d['data']['total_services'] ?? totalServices;
@@ -246,7 +246,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return false;
-      final response = await http.put(Uri.parse('\/api/admin/bookings'), headers: headers, body: jsonEncode({'booking_id': bookingId, 'status_code': statusCode})).timeout(const Duration(seconds: 10));
+      final response = await http.put(Uri.parse(kBaseUrl + '/api/admin/bookings'), headers: headers, body: jsonEncode({'booking_id': bookingId, 'status_code': statusCode})).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
@@ -259,7 +259,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return false;
-      final response = await http.post(Uri.parse('\/api/admin/services'), headers: headers, body: jsonEncode(serviceData)).timeout(const Duration(seconds: 10));
+      final response = await http.post(Uri.parse(kBaseUrl + '/api/admin/services'), headers: headers, body: jsonEncode(serviceData)).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
@@ -272,7 +272,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return false;
-      final response = await http.put(Uri.parse('\/api/admin/services'), headers: headers, body: jsonEncode(serviceData)).timeout(const Duration(seconds: 10));
+      final response = await http.put(Uri.parse(kBaseUrl + '/api/admin/services'), headers: headers, body: jsonEncode(serviceData)).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
@@ -285,7 +285,7 @@ class ApiService {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return false;
-      final response = await http.delete(Uri.parse('\/api/admin/services?service_id='), headers: headers).timeout(const Duration(seconds: 10));
+      final response = await http.delete(Uri.parse(kBaseUrl + '/api/admin/services?service_id=' + serviceId), headers: headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
