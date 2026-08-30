@@ -186,7 +186,11 @@ class ApiService {
     return false;
   }
 
-  static const List<String> kAdminEmails = ['naseem01099@gmail.com'];
+  static const List<String> kAdminEmails = [
+    'naseem01099@gmail.com',
+    'alihmdy135135@gmail.com',
+    'alihamdy135@gmail.com',
+  ];
 
   static bool isAdmin() {
     final user = AuthService.currentUser;
