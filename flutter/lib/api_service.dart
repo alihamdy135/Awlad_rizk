@@ -19,21 +19,15 @@ class ApiService {
       final response = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] != null && (data['data'] as List).isNotEmpty) {
-          final remote = (data['data'] as List).map((e) => ServiceModel.fromJson(e)).toList();
-          for (final r in remote) {
-            final idx = _localServices.indexWhere((s) => s.serviceId == r.serviceId);
-            if (idx != -1) {
-              _localServices[idx] = r;
-            } else {
-              _localServices.add(r);
-            }
-          }
+        if (data['success'] == true && data['data'] != null) {
+          final remoteList = (data['data'] as List).map((e) => ServiceModel.fromJson(e)).toList();
+          _localServices.clear();
+          _localServices.addAll(remoteList);
         }
       }
     } catch (_) {}
 
-    var results = List<ServiceModel>.from(_localServices);
+    var results = List<ServiceModel>.from(_localServices.isNotEmpty ? _localServices : _fallbackServices);
     if (featured) results = results.where((s) => s.isFeatured).toList();
     if (categoryId != null && categoryId.isNotEmpty) results = results.where((s) => s.categoryId == categoryId).toList();
     return results;
@@ -415,22 +409,6 @@ class ApiService {
   }
 
   static Future<bool> createServiceAdmin(Map<String, dynamic> serviceData) async {
-    final newId = serviceData['service_id'] ?? 'SRV-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
-    final newService = ServiceModel(
-      id: newId,
-      serviceId: newId,
-      categoryId: serviceData['category_id'] ?? 'CAT-01',
-      nameAr: serviceData['name_ar'] ?? serviceData['name'] ?? 'خدمة جديدة',
-      shortDescriptionAr: serviceData['short_description_ar'] ?? serviceData['name_ar'] ?? '',
-      basePriceSar: (serviceData['base_price_sar'] ?? serviceData['price'] ?? 100).toDouble(),
-      priceUnit: serviceData['price_unit'] ?? 'للوحدة',
-      warrantyDays: serviceData['warranty_days'] ?? 30,
-      slug: serviceData['slug'] ?? newId.toLowerCase(),
-      isFeatured: serviceData['is_featured'] ?? false,
-    );
-
-    _localServices.insert(0, newService);
-
     try {
       String? idToken = await AuthService.getIdToken();
       Map<String, String> headers = {'Content-Type': 'application/json'};
@@ -442,30 +420,11 @@ class ApiService {
       ).timeout(const Duration(seconds: 10));
     } catch (_) {}
 
+    await getServices();
     return true;
   }
 
   static Future<bool> updateServiceAdmin(Map<String, dynamic> serviceData) async {
-    final serviceId = serviceData['service_id'];
-    if (serviceId != null) {
-      final index = _localServices.indexWhere((s) => s.serviceId == serviceId || s.id == serviceId);
-      if (index != -1) {
-        final old = _localServices[index];
-        _localServices[index] = ServiceModel(
-          id: old.id,
-          serviceId: old.serviceId,
-          categoryId: serviceData['category_id'] ?? old.categoryId,
-          nameAr: serviceData['name_ar'] ?? old.nameAr,
-          shortDescriptionAr: serviceData['short_description_ar'] ?? old.shortDescriptionAr,
-          basePriceSar: (serviceData['base_price_sar'] ?? old.basePriceSar).toDouble(),
-          priceUnit: serviceData['price_unit'] ?? old.priceUnit,
-          warrantyDays: serviceData['warranty_days'] ?? old.warrantyDays,
-          slug: old.slug,
-          isFeatured: serviceData['is_featured'] ?? old.isFeatured,
-        );
-      }
-    }
-
     try {
       String? idToken = await AuthService.getIdToken();
       Map<String, String> headers = {'Content-Type': 'application/json'};
@@ -477,12 +436,11 @@ class ApiService {
       ).timeout(const Duration(seconds: 10));
     } catch (_) {}
 
+    await getServices();
     return true;
   }
 
   static Future<bool> deleteServiceAdmin(String serviceId) async {
-    _localServices.removeWhere((s) => s.serviceId == serviceId || s.id == serviceId);
-
     try {
       String? idToken = await AuthService.getIdToken();
       Map<String, String> headers = {'Content-Type': 'application/json'};
@@ -493,6 +451,7 @@ class ApiService {
       ).timeout(const Duration(seconds: 10));
     } catch (_) {}
 
+    await getServices();
     return true;
   }
 

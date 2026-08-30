@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest) {
     const updated = await ServiceModel.findOneAndUpdate(
       { service_id },
       { ...updateData },
-      { new: true }
+      { new: true, upsert: true }
     ).lean();
 
     if (!updated) {
