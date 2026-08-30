@@ -351,9 +351,37 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     );
   }
 
+  String _getServiceName(String serviceId) {
+    final found = _services.firstWhere(
+      (s) => s.serviceId == serviceId || s.id == serviceId,
+      orElse: () => ServiceModel(id: '', serviceId: '', categoryId: '', nameAr: serviceId.isNotEmpty ? serviceId : 'خدمة تكييف', shortDescriptionAr: '', basePriceSar: 0, priceUnit: '', warrantyDays: 0, slug: '', isFeatured: false),
+    );
+    return found.nameAr.isNotEmpty ? found.nameAr : (serviceId.isNotEmpty ? serviceId : 'خدمة تكييف وتبريد');
+  }
+
+  String _getAreaName(String areaId) {
+    final found = kServiceAreas.firstWhere(
+      (a) => a['id'] == areaId,
+      orElse: () => {'name': areaId.isNotEmpty ? areaId : 'جدة'},
+    );
+    return found['name'] ?? areaId;
+  }
+
+  String _getSlotName(String slotId) {
+    final found = kTimeSlots.firstWhere(
+      (s) => s['id'] == slotId,
+      orElse: () => {'name': slotId},
+    );
+    return found['name'] ?? slotId;
+  }
+
   Widget _buildAdminBookingCard(UserBookingModel booking) {
+    final serviceName = _getServiceName(booking.serviceId);
+    final areaName = _getAreaName(booking.areaId);
+    final slotName = _getSlotName(booking.slotId);
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: Padding(
@@ -369,11 +397,81 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
               ],
             ),
             const Divider(),
-            Text('العميل: ${booking.customerName}', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
-            Text('رقم الجوال: ${booking.customerPhone}', style: GoogleFonts.cairo(color: Colors.grey[700], fontSize: 13)),
-            Text('العنوان: ${booking.addressDetail}', style: GoogleFonts.cairo(color: Colors.grey[700], fontSize: 13)),
-            Text('الخدمات: ${booking.serviceNames.join(", ")}', style: GoogleFonts.cairo(fontWeight: FontWeight.w600, color: const Color(kColorPrimary))),
-            Text('المبلغ: ${booking.totalAmountSar} ريال', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green)),
+            Row(
+              children: [
+                const Icon(Icons.person_outline, size: 18, color: Color(kColorPrimary)),
+                const SizedBox(width: 6),
+                Text('العميل: ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                Text(booking.customerName.isNotEmpty ? booking.customerName : 'عميل', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.phone_outlined, size: 18, color: Color(kColorPrimary)),
+                const SizedBox(width: 6),
+                Text('الجوال: ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                SelectableText(booking.customerPhone, style: GoogleFonts.cairo(color: Colors.grey[800], fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.build_outlined, size: 18, color: Color(kColorPrimary)),
+                const SizedBox(width: 6),
+                Text('الخدمة المطلوبة: ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                Expanded(child: Text(serviceName, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: const Color(kColorPrimary)))),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.location_on_outlined, size: 18, color: Color(kColorPrimary)),
+                const SizedBox(width: 6),
+                Text('الحي: ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                Expanded(child: Text(areaName, style: GoogleFonts.cairo(color: Colors.grey[800]))),
+              ],
+            ),
+            if (booking.addressDetail.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.home_outlined, size: 18, color: Color(kColorPrimary)),
+                  const SizedBox(width: 6),
+                  Text('العنوان التفصيلي: ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                  Expanded(child: Text(booking.addressDetail, style: GoogleFonts.cairo(color: Colors.grey[800]))),
+                ],
+              ),
+            ],
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined, size: 18, color: Color(kColorPrimary)),
+                const SizedBox(width: 6),
+                Text('الموعد: ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                Text('${booking.preferredDate} (${slotName})', style: GoogleFonts.cairo(color: Colors.grey[900], fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.ac_unit, size: 18, color: Color(kColorPrimary)),
+                const SizedBox(width: 6),
+                Text('الكمية: ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                Text('${booking.quantity} مكيف', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14)),
+                const Spacer(),
+                Text('${booking.totalAmountSar} ريال', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green[700])),
+              ],
+            ),
+            if (booking.notes.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.amber.withOpacity(0.3))),
+                child: Text('ملاحظات العميل: ${booking.notes}', style: GoogleFonts.cairo(fontSize: 13, color: Colors.brown[800])),
+              ),
+            ],
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,

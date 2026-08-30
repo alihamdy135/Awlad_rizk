@@ -81,22 +81,26 @@ class UserBookingModel {
 
   factory UserBookingModel.fromJson(Map<String, dynamic> json) {
     return UserBookingModel(
-      id: json['_id'] ?? '',
-      bookingId: json['booking_id'] ?? '',
-      customerName: json['customer_name'] ?? '',
-      customerPhone: json['customer_phone'] ?? '',
-      serviceId: json['service_id'] ?? '',
-      areaId: json['area_id'] ?? '',
-      addressDetail: json['address_detail'] ?? '',
-      preferredDate: json['preferred_date'] ?? '',
-      slotId: json['slot_id'] ?? '',
-      quantity: json['quantity'] ?? 1,
-      notes: json['notes'] ?? '',
-      statusId: json['status_id'] ?? json['status_code'] ?? json['status'] ?? 'STAT-01',
-      estimatedPriceSar: (json['estimated_price_sar'] ?? json['total_amount_sar'] ?? json['total_price_sar'] ?? 0).toDouble(),
-      rating: json['rating'],
-      reviewText: json['review_text'],
-      createdAt: json['created_at'] ?? json['createdAt'] ?? '',
+      id: json['_id'] != null ? json['_id'].toString() : (json['booking_id']?.toString() ?? ''),
+      bookingId: json['booking_id']?.toString() ?? '',
+      customerName: json['customer_name']?.toString() ?? '',
+      customerPhone: json['customer_phone']?.toString() ?? '',
+      serviceId: json['service_id']?.toString() ?? '',
+      areaId: json['area_id']?.toString() ?? '',
+      addressDetail: json['address_detail']?.toString() ?? '',
+      preferredDate: json['preferred_date']?.toString() ?? '',
+      slotId: json['slot_id']?.toString() ?? '',
+      quantity: json['quantity'] != null ? (json['quantity'] as num).toInt() : 1,
+      notes: json['notes']?.toString() ?? '',
+      statusId: json['status_id']?.toString() ?? json['status_code']?.toString() ?? json['status']?.toString() ?? 'STAT-01',
+      estimatedPriceSar: json['estimated_price_sar'] != null
+          ? (json['estimated_price_sar'] as num).toDouble()
+          : (json['total_amount_sar'] != null
+              ? (json['total_amount_sar'] as num).toDouble()
+              : (json['total_price_sar'] != null ? (json['total_price_sar'] as num).toDouble() : 0.0)),
+      rating: json['rating'] != null ? (json['rating'] as num).toInt() : null,
+      reviewText: json['review_text']?.toString(),
+      createdAt: json['created_at']?.toString() ?? json['createdAt']?.toString() ?? '',
     );
   }
 }

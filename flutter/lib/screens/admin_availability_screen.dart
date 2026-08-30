@@ -66,6 +66,33 @@ class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
     });
   }
 
+  Future<void> _pickExactDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(kColorPrimary),
+              onPrimary: Colors.white,
+              onSurface: Color(kColorSecondary),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+      _loadAvailability();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -79,6 +106,33 @@ class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
         ),
         body: Column(
           children: [
+            // Exact Date Picker Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: Colors.white,
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, color: Color(kColorPrimary), size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'التاريخ: ${DateFormat('yyyy-MM-dd (EEEE)', 'ar').format(_selectedDate)}',
+                      style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(kColorSecondary)),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _pickExactDate,
+                    icon: const Icon(Icons.edit_calendar, size: 16, color: Color(kColorPrimary)),
+                    label: Text('اختيار يوم محدد', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(kColorPrimary))),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(kColorPrimary)),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
             // Horizontal Date Picker
             Container(
               height: 100,
