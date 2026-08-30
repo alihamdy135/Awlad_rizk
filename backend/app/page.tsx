@@ -103,7 +103,7 @@ function Header() {
             <Link href="/" className="logo" id="header-logo">
               <div className="logo-icon">❄️</div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>أولاد رزق</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>نسيم (Naseem)</div>
                 <div style={{ fontSize: 11, color: '#7A6355', fontWeight: 400 }}>للتبريد والتكييف</div>
               </div>
             </Link>
@@ -173,10 +173,6 @@ function Hero() {
       <div className="hero-pattern" />
       <div className="container">
         <div className="hero-content">
-          <div className="hero-badge fade-up">
-            <span>⭐</span>
-            <span>رقم 1 في خدمات التكييف بجدة</span>
-          </div>
           <h1 className="hero-title fade-up fade-up-d1">
             مكيفك يستحق<br />
             <span>خدمة احترافية</span><br />
@@ -451,7 +447,7 @@ function Footer() {
             <div className="footer-logo">
               <div className="logo-icon" style={{ width:40, height:40, fontSize:18 }}>❄️</div>
               <div>
-                <div>أولاد رزق</div>
+                <div>نسيم (Naseem)</div>
                 <div style={{ fontSize:12, fontWeight:400, color:'rgba(255,255,255,0.6)' }}>للتبريد والتكييف</div>
               </div>
             </div>
@@ -523,7 +519,7 @@ function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} أولاد رزق للتبريد والتكييف. جميع الحقوق محفوظة.</span>
+          <span>© {new Date().getFullYear()} نسيم للتبريد والتكييف - Naseem. جميع الحقوق محفوظة.</span>
           <span>صُنع بـ ❤️ في جدة</span>
         </div>
       </div>
