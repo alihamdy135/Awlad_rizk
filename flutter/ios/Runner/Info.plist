@@ -66,5 +66,22 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.549682272929-a02fre5igm90dat75aqh943lr4r6f9rm</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>هذا التطبيق يحتاج الوصول للموقع لتحديد عنوان الخدمة</string>
+	<key>NSCameraUsageDescription</key>
+	<string>يحتاج التطبيق للكاميرا لالتقاط صور (اختياري)</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>يحتاج التطبيق للوصول للصور</string>
 </dict>
 </plist>

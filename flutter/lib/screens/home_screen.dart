@@ -6,8 +6,6 @@ import '../services/auth_service.dart';
 import '../models.dart';
 import '../api_service.dart';
 import '../constants.dart';
-import '../widgets/ai_chat_widget.dart';
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -70,8 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
         drawer: _buildDrawer(),
-        floatingActionButton: _buildWhatsAppFAB(),
-        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       ),
     );
   }
@@ -691,26 +687,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  // ─── WhatsApp FAB ────────────────────────────────────────────────────
-  Widget _buildWhatsAppFAB() {
-    return FloatingActionButton(
-      onPressed: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-            child: const AiChatWidget(),
-          ),
-        );
-      },
-      backgroundColor: const Color(0xFF25D366),
-      elevation: 6,
-      child: const Icon(Icons.support_agent, color: Colors.white, size: 28),
     );
   }
 
