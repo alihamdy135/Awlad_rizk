@@ -30,6 +30,8 @@ export async function connectToDatabase() {
     const opts = {
       dbName: MONGODB_DB,
       bufferCommands: false,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts);

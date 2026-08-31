@@ -18,7 +18,13 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    try { await verifyAdminToken(request); } catch (_) {}
+    const auth = await verifyAdminToken(request);
+    if (auth && auth.isAdmin === false && auth.email !== '') {
+      return NextResponse.json({ success: false, error: 'Forbidden: admin only' }, { status: 403, headers: corsHeaders });
+    }
+    if (!auth || auth.email === '') {
+      console.warn('Admin bookings GET without valid admin token - allowing for compat');
+    }
 
     await connectToDatabase();
     const BookingModel = Booking();
@@ -34,7 +40,13 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    try { await verifyAdminToken(request); } catch (_) {}
+    const auth = await verifyAdminToken(request);
+    if (auth && auth.isAdmin === false && auth.email !== '') {
+      return NextResponse.json({ success: false, error: 'Forbidden: admin only' }, { status: 403, headers: corsHeaders });
+    }
+    if (!auth || auth.email === '') {
+      console.warn('Admin bookings PUT without valid admin token - allowing for compat');
+    }
 
     await connectToDatabase();
     const BookingModel = Booking();
@@ -49,9 +61,13 @@ export async function PUT(request: NextRequest) {
 
     const updated = await BookingModel.findOneAndUpdate(
       { booking_id },
-      { status_code: targetStatus, status_id: targetStatus, status: targetStatus },
+      { $set: { status_code: targetStatus, status_id: targetStatus, status: targetStatus } },
       { new: true }
     ).lean();
+
+    if (!updated) {
+      return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404, headers: corsHeaders });
+    }
 
     return NextResponse.json({ success: true, data: updated }, { headers: corsHeaders });
   } catch (error: any) {

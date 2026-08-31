@@ -134,6 +134,8 @@ class _BookingScreenState extends State<BookingScreen> {
 
       String bookingId = 'BK-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
 
+      bool apiSuccess = false;
+      String? apiError;
       try {
         final response = await http.post(
           Uri.parse('$kBaseUrl/api/bookings'),
@@ -150,14 +152,40 @@ class _BookingScreenState extends State<BookingScreen> {
             'notes': _notes,
             'estimated_price_sar': targetService.basePriceSar * _quantity,
           }),
-        ).timeout(const Duration(seconds: 10));
+        ).timeout(const Duration(seconds: 12));
 
         final data = jsonDecode(response.body);
-        if (data['booking_id'] != null && data['booking_id'].toString().isNotEmpty) {
-          bookingId = data['booking_id'].toString();
+        if (response.statusCode == 201 && data['success'] == true) {
+          if (data['booking_id'] != null && data['booking_id'].toString().isNotEmpty) {
+            bookingId = data['booking_id'].toString();
+          }
+          apiSuccess = true;
+        } else if (response.statusCode == 409) {
+          apiError = data['error']?.toString() ?? 'هذا الموعد محجوز بالفعل';
+        } else if (response.statusCode >= 400) {
+          apiError = data['error']?.toString() ?? 'فشل إنشاء الحجز';
+        } else {
+          // fallback: if no booking_id, still treat as success if local fallback needed
+          if (data['booking_id'] != null) {
+            bookingId = data['booking_id'].toString();
+            apiSuccess = true;
+          } else {
+            apiError = data['error']?.toString();
+          }
         }
       } catch (err) {
         debugPrint('Booking API warning, fallback used: $err');
+        apiError = err.toString();
+      }
+
+      if (apiError != null && !apiSuccess) {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(apiError, style: GoogleFonts.cairo()), backgroundColor: Colors.red),
+          );
+        }
+        return;
       }
 
       final newBooking = UserBookingModel(

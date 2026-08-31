@@ -37,21 +37,45 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase();
     const BookingModel = Booking();
+    const { DailyAvailability } = await import('@/models');
+    const DailyAvailabilityModel = DailyAvailability();
     const body = await request.json();
+
+    // Validate required fields
+    if (!body.preferred_date || !body.slot_id || !body.service_id || !body.area_id) {
+      return NextResponse.json({ success: false, error: 'Missing required booking fields (date, slot, service, area)' }, { status: 400, headers: corsHeaders });
+    }
+
+    // Prevent double-booking: check if slot already taken for same date (excluding cancelled)
+    const existingBooking = await BookingModel.findOne({
+      preferred_date: body.preferred_date,
+      slot_id: body.slot_id,
+      status_id: { $ne: 'STAT-04' },
+    }).lean();
+    if (existingBooking) {
+      return NextResponse.json({ success: false, error: 'هذا الموعد محجوز بالفعل. الرجاء اختيار وقت آخر.' }, { status: 409, headers: corsHeaders });
+    }
+    // Also check admin blocked slots
+    const adminBlock = await DailyAvailabilityModel.findOne({ date: body.preferred_date }).lean();
+    if (adminBlock && adminBlock.blocked_slots.includes(body.slot_id)) {
+      return NextResponse.json({ success: false, error: 'هذا الوقت غير متاح حالياً (مشغول من قبل الإدارة).' }, { status: 409, headers: corsHeaders });
+    }
 
     const final_name = customer_name || body.customer_name || 'عميل';
     const final_email = customer_email || body.customer_email || '';
+    // Enforce private per-account: if authenticated, use token data; else fallback to body
+    const final_user_id = user_id || body.user_id || `guest_${Date.now()}`;
 
     // Generate collision-proof unique booking ID
     const count = await BookingModel.countDocuments();
-    const uniqueSuffix = Date.now().toString().slice(-4);
+    const uniqueSuffix = Date.now().toString().slice(-6);
     const booking_id = `BK-${String(100001 + count).padStart(6, '0')}-${uniqueSuffix}`;
 
     const booking = new BookingModel({
       ...body,
       customer_name: final_name,
       customer_email: final_email,
-      user_id: user_id || body.user_id || '',
+      user_id: final_user_id,
       booking_id,
       status_id: 'STAT-01',
       status_code: 'STAT-01',
@@ -68,11 +92,36 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Secure: require auth, return only own bookings for users, all for admins
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized - token required' }, { status: 401, headers: corsHeaders });
+    }
+    const token = authHeader.split('Bearer ')[1];
+    let decoded: any = null;
+    try {
+      decoded = await verifyOrDecodeToken(token);
+    } catch (e) {
+      return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401, headers: corsHeaders });
+    }
+    const email = (decoded.email || '').toLowerCase().trim();
+    const uid = decoded.uid || '';
+    const { ADMIN_EMAILS } = await import('@/lib/admin-auth-helper');
+    const isAdmin = ADMIN_EMAILS.map((x: string) => x.toLowerCase().trim()).includes(email);
+
     await connectToDatabase();
     const BookingModel = Booking();
-    const bookings = await BookingModel.find({}).sort({ _id: -1 }).lean();
+    let bookings;
+    if (isAdmin) {
+      bookings = await BookingModel.find({}).sort({ _id: -1 }).lean();
+    } else {
+      // Private per account: only own bookings
+      bookings = await BookingModel.find({
+        $or: [{ user_id: uid }, { customer_email: email }],
+      }).sort({ _id: -1 }).lean();
+    }
     return NextResponse.json({ success: true, data: bookings }, { headers: corsHeaders });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ success: false, error: 'Failed to fetch bookings' }, { status: 500, headers: corsHeaders });
   }
 }

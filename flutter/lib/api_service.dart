@@ -109,15 +109,27 @@ class ApiService {
   }
 
   static Future<List<String>> getAdminAvailability(String date) async {
+    // Returns union (customer + admin) for display, but internally we keep separation
+    final detail = await getAdminAvailabilityDetail(date);
+    return detail['all'] ?? [];
+  }
+
+  static Future<Map<String, List<String>>> getAdminAvailabilityDetail(String date) async {
     try {
       final headers = await _authHeaders();
       final response = await http.get(Uri.parse(kBaseUrl + '/api/admin/availability?date=' + date + '&nocache=' + DateTime.now().millisecondsSinceEpoch.toString()), headers: headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] != null) return List<String>.from(data['data']);
+        if (data['success'] == true) {
+          return {
+            'all': data['data'] != null ? List<String>.from(data['data']) : <String>[],
+            'customer': data['customer_slots'] != null ? List<String>.from(data['customer_slots']) : <String>[],
+            'admin': data['admin_slots'] != null ? List<String>.from(data['admin_slots']) : <String>[],
+          };
+        }
       }
     } catch (_) {}
-    return [];
+    return {'all': [], 'customer': [], 'admin': []};
   }
 
   static Future<bool> setAdminAvailability(String date, List<String> blockedSlots) async {

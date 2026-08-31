@@ -28,9 +28,18 @@ export async function GET(request: Request) {
     await connectToDatabase();
     const BookingModel = Booking();
 
+    // Fix: use correct sort field _id / created_at; ensure private per account strict
+    const cleanEmail = (userEmail || '').toLowerCase().trim();
+    const cleanUid = (userId || '').trim();
+    const orConditions: any[] = [];
+    if (cleanUid) orConditions.push({ user_id: cleanUid });
+    if (cleanEmail) orConditions.push({ customer_email: cleanEmail });
+    if (orConditions.length === 0) {
+      return NextResponse.json({ success: true, data: [] }, { headers: corsHeaders });
+    }
     const userBookings = await BookingModel.find({
-      $or: [{ user_id: userId }, { customer_email: userEmail }]
-    }).sort({ createdAt: -1 }).lean();
+      $or: orConditions
+    }).sort({ _id: -1 }).lean();
 
     return NextResponse.json({ success: true, data: userBookings }, { headers: corsHeaders });
   } catch (error) {
@@ -60,8 +69,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'booking_id and rating are required' }, { status: 400, headers: corsHeaders });
     }
 
+    const cleanUpdEmail = (decoded.email || '').toLowerCase().trim();
+    const orUpd: any[] = [{ user_id: userId }];
+    if (cleanUpdEmail) orUpd.push({ customer_email: cleanUpdEmail });
     const updatedBooking = await BookingModel.findOneAndUpdate(
-      { booking_id, $or: [{ user_id: userId }, { customer_email: decoded.email }] },
+      { booking_id, $or: orUpd },
       { rating, review_text },
       { new: true }
     ).lean();

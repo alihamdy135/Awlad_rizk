@@ -13,11 +13,14 @@ class AdminAvailabilityScreen extends StatefulWidget {
 
 class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
   DateTime _selectedDate = DateTime.now();
-  List<String> _blockedSlots = [];
+  List<String> _adminBlockedSlots = [];
+  List<String> _customerBookedSlots = [];
   bool _isLoading = false;
   bool _isSaving = false;
   
   late List<DateTime> _upcomingDays;
+
+  List<String> get _allBlockedSlots => [..._adminBlockedSlots, ..._customerBookedSlots].toSet().toList();
 
   @override
   void initState() {
@@ -29,10 +32,11 @@ class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
   Future<void> _loadAvailability() async {
     setState(() => _isLoading = true);
     final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    final blocked = await ApiService.getAdminAvailability(dateStr);
+    final detail = await ApiService.getAdminAvailabilityDetail(dateStr);
     if (mounted) {
       setState(() {
-        _blockedSlots = blocked;
+        _adminBlockedSlots = detail['admin'] ?? [];
+        _customerBookedSlots = detail['customer'] ?? [];
         _isLoading = false;
       });
     }
@@ -41,7 +45,8 @@ class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
   Future<void> _saveAvailability() async {
     setState(() => _isSaving = true);
     final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    final success = await ApiService.setAdminAvailability(dateStr, _blockedSlots);
+    // Only save admin slots, customer slots are auto from bookings
+    final success = await ApiService.setAdminAvailability(dateStr, _adminBlockedSlots);
     if (mounted) {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,15 +58,27 @@ class _AdminAvailabilityScreenState extends State<AdminAvailabilityScreen> {
           backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
+      if (success) _loadAvailability();
     }
   }
 
   void _toggleSlot(String slotId) {
+    // If slot is booked by customer, cannot toggle (show message)
+    if (_customerBookedSlots.contains(slotId)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('هذا الوقت محجوز من قبل عميل (${slotId}) ولا يمكن إلغاؤه إلا بإلغاء الحجز', style: GoogleFonts.cairo(fontSize: 12)),
+          backgroundColor: Colors.orange[700],
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
     setState(() {
-      if (_blockedSlots.contains(slotId)) {
-        _blockedSlots.remove(slotId);
+      if (_adminBlockedSlots.contains(slotId)) {
+        _adminBlockedSlots.remove(slotId);
       } else {
-        _blockedSlots.add(slotId);
+        _adminBlockedSlots.add(slotId);
       }
     });
   }
@@ -230,13 +247,17 @@ String _arabicDayName(int weekday) {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(width: 20, height: 4, color: Colors.green),
-                const SizedBox(width: 8),
-                Text('متاح', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-                const SizedBox(width: 24),
-                Container(width: 20, height: 4, color: Colors.red),
-                const SizedBox(width: 8),
-                Text('مشغول', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                Container(width: 16, height: 16, decoration: BoxDecoration(color: Colors.green.withOpacity(0.8), borderRadius: BorderRadius.circular(4))),
+                const SizedBox(width: 6),
+                Text('متاح', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(width: 16),
+                Container(width: 16, height: 16, decoration: BoxDecoration(color: Colors.red.withOpacity(0.8), borderRadius: BorderRadius.circular(4))),
+                const SizedBox(width: 6),
+                Text('محجوب (أدمن)', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(width: 16),
+                Container(width: 16, height: 16, decoration: BoxDecoration(color: Colors.orange.withOpacity(0.9), borderRadius: BorderRadius.circular(4), border: Border.all(color: Colors.deepOrange))),
+                const SizedBox(width: 6),
+                Text('محجوز (عميل)', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
               ],
             ),
             
@@ -250,31 +271,52 @@ String _arabicDayName(int weekday) {
                       padding: const EdgeInsets.all(16),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 3,
+                        childAspectRatio: 2.8,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
                       itemCount: kTimeSlots.length,
                       itemBuilder: (context, index) {
                         final slot = kTimeSlots[index];
-                        final isBlocked = _blockedSlots.contains(slot['id']);
+                        final isCustomerBooked = _customerBookedSlots.contains(slot['id']);
+                        final isAdminBlocked = _adminBlockedSlots.contains(slot['id']);
+                        final isBlocked = isCustomerBooked || isAdminBlocked;
+                        Color bg;
+                        String label = slot['name']!;
+                        if (isCustomerBooked) {
+                          bg = Colors.orange.withOpacity(0.95);
+                          label = '${slot['name']} (عميل)';
+                        } else if (isAdminBlocked) {
+                          bg = Colors.red.withOpacity(0.85);
+                        } else {
+                          bg = Colors.green.withOpacity(0.85);
+                        }
 
                         return InkWell(
                           onTap: () => _toggleSlot(slot['id']!),
                           borderRadius: BorderRadius.circular(8),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: isBlocked ? Colors.red.withOpacity(0.8) : Colors.green.withOpacity(0.8),
+                              color: bg,
                               borderRadius: BorderRadius.circular(8),
+                              border: isCustomerBooked ? Border.all(color: Colors.deepOrange, width: 1.5) : null,
                             ),
                             alignment: Alignment.center,
-                            child: Text(
-                              slot['name']!,
-                              style: GoogleFonts.cairo(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  label,
+                                  style: GoogleFonts.cairo(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (isCustomerBooked)
+                                  Text('محجوز تلقائيا', style: GoogleFonts.cairo(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
+                              ],
                             ),
                           ),
                         );
