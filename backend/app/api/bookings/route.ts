@@ -46,14 +46,16 @@ export async function POST(request: NextRequest) {
     if (!body.preferred_date || !body.slot_id || !body.service_id || !body.area_id) {
       return NextResponse.json({ success: false, error: 'Missing required booking fields (date, slot, service, area)' }, { status: 400, headers: corsHeaders });
     }
-    // Load service to determine pricing type
+    // Load service to determine pricing type and min price
     let servicePricingType = 'fixed';
     let serviceIsOnVisit = false;
+    let serviceMinPrice = 0;
     try {
       const svc = await ServiceModel.findOne({ service_id: body.service_id }).lean() as any;
       if (svc) {
         servicePricingType = svc.pricing_type || (svc.is_price_on_visit ? 'on_visit' : 'fixed');
         serviceIsOnVisit = servicePricingType === 'on_visit' || !!svc.is_price_on_visit;
+        serviceMinPrice = Number(svc.base_price_sar || svc.min_price_sar || 0);
       }
     } catch (_) {}
 
@@ -82,8 +84,9 @@ export async function POST(request: NextRequest) {
     const uniqueSuffix = Date.now().toString().slice(-6);
     const booking_id = `BK-${String(100001 + count).padStart(6, '0')}-${uniqueSuffix}`;
 
-    // Handle pricing: if on_visit, estimated_price is 0 and final will be set on completion
-    const estimated = serviceIsOnVisit ? 0 : Number(body.estimated_price_sar || body.total_amount_sar || 0);
+    // Handle pricing: if on_visit, estimated is min price * qty (or 0 if no min), final will be set on completion (>= min)
+    const qty = Number(body.quantity) || 1;
+    const estimated = serviceIsOnVisit ? (serviceMinPrice > 0 ? serviceMinPrice * qty : 0) : Number(body.estimated_price_sar || body.total_amount_sar || 0);
     const booking = new BookingModel({
       ...body,
       customer_name: final_name,

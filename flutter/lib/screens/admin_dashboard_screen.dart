@@ -400,8 +400,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     final svc = _getServiceById(booking.serviceId);
     final isOnVisit = booking.isOnVisitPricing || (svc?.isPriceOnVisit ?? false);
     final showFinal = booking.finalPriceSar != null && booking.finalPriceSar! > 0;
+    final minPrice = svc?.basePriceSar ?? 0;
+    final minDisplay = minPrice > 0 ? minPrice.toStringAsFixed(0) : (booking.estimatedPriceSar > 0 ? (booking.estimatedPriceSar / booking.quantity).toStringAsFixed(0) : null);
     final priceText = isOnVisit
-        ? (showFinal ? '${booking.finalPriceSar!.toStringAsFixed(0)} ريال (بعد المعاينة)' : 'التسعير عند الزيارة - لم يحدد بعد')
+        ? (showFinal ? '${booking.finalPriceSar!.toStringAsFixed(0)} ريال (بعد المعاينة)' : (minDisplay != null && minDisplay != '0' ? 'يبدأ من $minDisplay ريال - لم يحدد بعد' : 'التسعير عند الزيارة - لم يحدد بعد'))
         : '${booking.totalAmountSar.toStringAsFixed(0)} ريال';
     final priceColor = isOnVisit && !showFinal ? Colors.orange[700] : Colors.green[700];
 
@@ -544,9 +546,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     final isOnVisit = booking.isOnVisitPricing || (svc?.isPriceOnVisit ?? false);
     final isCompletedAlready = booking.statusCode.toUpperCase() == 'STAT-03';
 
-    // If completing an on_visit booking, we need price input
+    // If completing an on_visit booking, we need price input with min check
     if (isOnVisit && !isCompletedAlready) {
-      final priceCtrl = TextEditingController(text: booking.finalPriceSar?.toStringAsFixed(0) ?? '');
+      final minPerUnit = svc?.basePriceSar ?? 0;
+      final minTotal = minPerUnit > 0 ? minPerUnit * booking.quantity : (booking.estimatedPriceSar > 0 ? booking.estimatedPriceSar : 0);
+      final priceCtrl = TextEditingController(text: booking.finalPriceSar?.toStringAsFixed(0) ?? (minTotal > 0 ? minTotal.toStringAsFixed(0) : ''));
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -557,7 +561,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Text('هذه الخدمة بنظام "التسعير عند الزيارة". عند تغيير الحالة إلى مكتمل يجب إدخال السعر النهائي ليتم احتسابه في الأرباح.', style: GoogleFonts.cairo(fontSize: 12, color: Colors.brown[800]))),
+                Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Text(minTotal > 0 ? 'هذه الخدمة بنظام "التسعير عند الزيارة" - الحد الأدنى ${minTotal.toStringAsFixed(0)} ريال. عند الإكمال يجب إدخال السعر النهائي (لا يقل عن الحد الأدنى) ليتم احتسابه في الأرباح.' : 'هذه الخدمة بنظام "التسعير عند الزيارة". عند تغيير الحالة إلى مكتمل يجب إدخال السعر النهائي ليتم احتسابه في الأرباح.', style: GoogleFonts.cairo(fontSize: 12, color: Colors.brown[800]))),
                 const SizedBox(height: 12),
                 ListTile(
                   title: Text('🟡 قيد الانتظار', style: GoogleFonts.cairo()),
@@ -574,7 +578,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                   controller: priceCtrl,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: 'السعر النهائي بالريال *',
+                    labelText: minTotal > 0 ? 'السعر النهائي (الحد الأدنى $minTotal ريال) *' : 'السعر النهائي بالريال *',
+                    hintText: minTotal > 0 ? 'أدخل سعراً >= $minTotal' : null,
                     prefixIcon: const Icon(Icons.attach_money, color: Color(kColorPrimary)),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     filled: true,
@@ -591,6 +596,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                       final p = double.tryParse(priceCtrl.text.trim());
                       if (p == null || p <= 0) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('أدخل سعراً صحيحاً أكبر من صفر', style: GoogleFonts.cairo()), backgroundColor: Colors.red));
+                        return;
+                      }
+                      if (minTotal > 0 && p < minTotal) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('السعر يجب أن لا يقل عن الحد الأدنى $minTotal ريال', style: GoogleFonts.cairo()), backgroundColor: Colors.red));
                         return;
                       }
                       Navigator.pop(ctx);
@@ -686,8 +695,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(service.isPriceOnVisit ? 'التسعير عند الزيارة / ${service.priceUnit} (ضمان ${service.warrantyDays} يوم)' : '${service.basePriceSar.toStringAsFixed(0)} ريال / ${service.priceUnit} (ضمان ${service.warrantyDays} يوم)', style: GoogleFonts.cairo(fontSize: 12)),
-                      if (service.isPriceOnVisit) Padding(padding: const EdgeInsets.only(top: 2), child: Text('⚠️ يحدد السعر عند الإكمال', style: GoogleFonts.cairo(fontSize: 10, color: Colors.orange[700], fontWeight: FontWeight.bold))),
+                      Text(service.isPriceOnVisit ? (service.basePriceSar > 0 ? 'يبدأ من ${service.basePriceSar.toStringAsFixed(0)} ريال (قابل للزيادة) / ${service.priceUnit} (ضمان ${service.warrantyDays} يوم)' : 'التسعير عند الزيارة / ${service.priceUnit} (ضمان ${service.warrantyDays} يوم)') : '${service.basePriceSar.toStringAsFixed(0)} ريال / ${service.priceUnit} (ضمان ${service.warrantyDays} يوم)', style: GoogleFonts.cairo(fontSize: 12)),
+                      if (service.isPriceOnVisit) Padding(padding: const EdgeInsets.only(top: 2), child: Text(service.basePriceSar > 0 ? '⚠️ الحد الأدنى ${service.basePriceSar.toStringAsFixed(0)} ريال - يحدد السعر النهائي عند الإكمال' : '⚠️ يحدد السعر عند الإكمال', style: GoogleFonts.cairo(fontSize: 10, color: Colors.orange[700], fontWeight: FontWeight.bold))),
                     ],
                   ),
                   trailing: Row(
@@ -708,7 +717,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
 
   void _showAddOrEditServiceDialog({ServiceModel? service}) {
     final nameCtrl = TextEditingController(text: service?.nameAr ?? '');
-    final priceCtrl = TextEditingController(text: service != null && !service.isPriceOnVisit ? service.basePriceSar.toStringAsFixed(0) : '120');
+    final priceCtrl = TextEditingController(text: service != null ? service.basePriceSar.toStringAsFixed(0) : '120');
     final descCtrl = TextEditingController(text: service?.shortDescriptionAr ?? '');
     final warrantyCtrl = TextEditingController(text: service != null ? service.warrantyDays.toString() : '30');
     bool isOnVisit = service?.isPriceOnVisit ?? false;
@@ -733,12 +742,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                   onChanged: (v) => setS(() => isOnVisit = v),
                   contentPadding: EdgeInsets.zero,
                 ),
-                if (!isOnVisit) ...[
-                  const SizedBox(height: 8),
-                  TextField(controller: priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'السعر بالريال السعودي')),
-                ] else ...[
-                  const SizedBox(height: 4),
-                  Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Row(children: [const Icon(Icons.info_outline, size: 16, color: Colors.orange), const SizedBox(width: 6), Expanded(child: Text('سيظهر للعميل "عند الزيارة" وسيطلب منك إدخال السعر عند تغيير الحالة لمكتمل', style: GoogleFonts.cairo(fontSize: 11, color: Colors.brown[700])))])),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: priceCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: isOnVisit ? 'الحد الأدنى للسعر (ريال) - يبدأ من' : 'السعر بالريال السعودي',
+                    hintText: isOnVisit ? 'مثال: 100 (سيظهر يبدأ من 100)' : null,
+                  ),
+                ),
+                if (isOnVisit) ...[
+                  const SizedBox(height: 6),
+                  Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Row(children: [const Icon(Icons.info_outline, size: 16, color: Colors.orange), const SizedBox(width: 6), Expanded(child: Text('سيظهر للعميل "يبدأ من X ريال" ويمكن أن يزيد بعد المعاينة عند الإكمال', style: GoogleFonts.cairo(fontSize: 11, color: Colors.brown[700])))])),
                 ],
                 const SizedBox(height: 8),
                 TextField(controller: warrantyCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'مدة الضمان بالأيام (مثلاً 30)')),
@@ -755,20 +770,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('أدخل اسم الخدمة', style: GoogleFonts.cairo()), backgroundColor: Colors.red));
                   return;
                 }
-                if (!isOnVisit && (double.tryParse(priceCtrl.text) == null || double.parse(priceCtrl.text) <= 0)) {
+                final parsedPrice = double.tryParse(priceCtrl.text.trim());
+                if (parsedPrice == null || parsedPrice < 0) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('أدخل سعراً صحيحاً', style: GoogleFonts.cairo()), backgroundColor: Colors.red));
+                  return;
+                }
+                if (!isOnVisit && parsedPrice <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('أدخل سعراً أكبر من صفر', style: GoogleFonts.cairo()), backgroundColor: Colors.red));
                   return;
                 }
                 Navigator.pop(ctx);
                 final data = {
                   if (service != null) 'service_id': service.serviceId,
                   'name_ar': nameCtrl.text.trim(),
-                  'base_price_sar': isOnVisit ? 0 : double.tryParse(priceCtrl.text) ?? 100,
+                  'base_price_sar': parsedPrice,
                   'short_description_ar': descCtrl.text.trim(),
                   'warranty_days': int.tryParse(warrantyCtrl.text) ?? 30,
                   'pricing_type': isOnVisit ? 'on_visit' : 'fixed',
                   'is_price_on_visit': isOnVisit,
-                  'price_unit': isOnVisit ? 'عند الزيارة' : 'للوحدة',
+                  'price_unit': isOnVisit ? 'يبدأ من' : 'للوحدة',
                 };
                 setState(() => _isLoading = true);
                 bool success = false;

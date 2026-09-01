@@ -49,7 +49,7 @@ class ServiceModel {
     );
   }
 
-  String get displayPrice => isPriceOnVisit ? 'التسعير عند الزيارة' : '$basePriceSar ريال';
+  String get displayPrice => isPriceOnVisit ? (basePriceSar > 0 ? 'يبدأ من ${basePriceSar.toStringAsFixed(0)} ريال' : 'التسعير عند الزيارة') : '${basePriceSar.toStringAsFixed(0)} ريال';
 }
 
 class CategoryModel {

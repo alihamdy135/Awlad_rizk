@@ -44,13 +44,15 @@ export async function POST(request: NextRequest) {
 
     const pricing_type = body.pricing_type === 'on_visit' || body.is_price_on_visit === true ? 'on_visit' : 'fixed';
     const is_price_on_visit = pricing_type === 'on_visit';
+    // For on_visit, base_price_sar is minimum price
+    const basePrice = is_price_on_visit ? (Number(body.base_price_sar ?? body.min_price_sar) || 0) : (Number(body.base_price_sar) || 100);
     const newService = new ServiceModel({
       service_id,
       category_id: body.category_id || 'CAT-01',
       name_ar: body.name_ar,
       short_description_ar: body.short_description_ar || body.name_ar,
-      base_price_sar: is_price_on_visit ? 0 : (Number(body.base_price_sar) || 100),
-      price_unit: body.price_unit || (is_price_on_visit ? 'عند الزيارة' : 'للوحدة'),
+      base_price_sar: basePrice,
+      price_unit: body.price_unit || (is_price_on_visit ? 'يبدأ من' : 'للوحدة'),
       warranty_days: Number(body.warranty_days) || 30,
       slug,
       is_featured: body.is_featured ?? true,
@@ -81,13 +83,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'service_id is required' }, { status: 400, headers: corsHeaders });
     }
     // Normalize pricing_type handling on update
-    if (updateData.pricing_type || updateData.is_price_on_visit !== undefined) {
-      const pt = updateData.pricing_type === 'on_visit' || updateData.is_price_on_visit === true ? 'on_visit' : 'fixed';
-      updateData.pricing_type = pt;
-      updateData.is_price_on_visit = pt === 'on_visit';
-      if (pt === 'on_visit') {
-        updateData.base_price_sar = 0;
-        updateData.price_unit = updateData.price_unit || 'عند الزيارة';
+    if (updateData.pricing_type || updateData.is_price_on_visit !== undefined || updateData.base_price_sar !== undefined) {
+      const pt = updateData.pricing_type === 'on_visit' || updateData.is_price_on_visit === true ? 'on_visit' : (updateData.pricing_type === 'fixed' ? 'fixed' : undefined);
+      if (pt) {
+        updateData.pricing_type = pt;
+        updateData.is_price_on_visit = pt === 'on_visit';
+        if (pt === 'on_visit') {
+          // keep min price as provided, allow 0
+          if (updateData.base_price_sar !== undefined) updateData.base_price_sar = Number(updateData.base_price_sar) || 0;
+          updateData.price_unit = updateData.price_unit || 'يبدأ من';
+        }
+      } else if (updateData.is_price_on_visit === false) {
+        updateData.pricing_type = 'fixed';
+        updateData.is_price_on_visit = false;
       }
     }
 

@@ -64,7 +64,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404, headers: corsHeaders });
     }
 
-    // If completing an on_visit booking, require final_price
+    // If completing an on_visit booking, require final_price >= min price
     const isOnVisit = existing.is_price_on_visit || existing.pricing_type === 'on_visit';
     const isCompleting = targetStatus === 'STAT-03' || String(targetStatus).toUpperCase().includes('COMPLETED');
     let updateFields: any = { status_code: targetStatus, status_id: targetStatus, status: targetStatus };
@@ -73,8 +73,19 @@ export async function PUT(request: NextRequest) {
       if (!finalPrice || isNaN(finalPrice) || finalPrice <= 0) {
         return NextResponse.json({ success: false, error: 'يجب إدخال السعر النهائي للخدمة (التسعير عند الزيارة) عند الإكمال' }, { status: 400, headers: corsHeaders });
       }
+      // Check against min price from service or booking estimated min
+      let minTotal = 0;
+      try {
+        const { Service } = await import('@/models');
+        const svc = await Service().findOne({ service_id: existing.service_id }).lean() as any;
+        if (svc) minTotal = Number(svc.base_price_sar || 0) * Number(existing.quantity || 1);
+      } catch (_) {}
+      // fallback to existing estimated if service not found
+      if (minTotal === 0 && existing.estimated_price_sar) minTotal = Number(existing.estimated_price_sar);
+      if (minTotal > 0 && finalPrice < minTotal) {
+        return NextResponse.json({ success: false, error: `السعر النهائي يجب أن لا يقل عن الحد الأدنى (${minTotal.toStringAsFixed(0)} ريال)` }, { status: 400, headers: corsHeaders });
+      }
       updateFields.final_price_sar = finalPrice;
-      // Also keep estimated synced for backward compat
       updateFields.estimated_price_sar = finalPrice;
     } else if (final_price_sar !== undefined && final_price_sar !== null && final_price_sar !== '') {
       const fp = Number(final_price_sar);
