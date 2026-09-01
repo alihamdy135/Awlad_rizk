@@ -254,17 +254,35 @@ class ApiService {
     return {'total_bookings': allBookings.length, 'total_revenue_sar': totalRevenue, 'pending_count': pendingCount, 'in_progress_count': inProgressCount, 'completed_count': completedCount, 'cancelled_count': cancelledCount, 'total_services': totalServices, 'total_users': 1};
   }
 
-  static Future<bool> updateBookingStatusAdmin(String bookingId, String statusCode) async {
+  static Future<bool> updateBookingStatusAdmin(String bookingId, String statusCode, {double? finalPriceSar}) async {
     try {
       final headers = await _authHeaders();
       if (!headers.containsKey('Authorization')) return false;
-      final response = await http.put(Uri.parse(kBaseUrl + '/api/admin/bookings'), headers: headers, body: jsonEncode({'booking_id': bookingId, 'status_code': statusCode})).timeout(const Duration(seconds: 10));
+      final Map<String, dynamic> body = {'booking_id': bookingId, 'status_code': statusCode};
+      if (finalPriceSar != null) body['final_price_sar'] = finalPriceSar;
+      final response = await http.put(Uri.parse(kBaseUrl + '/api/admin/bookings'), headers: headers, body: jsonEncode(body)).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['success'] == true;
       }
     } catch (_) {}
     return false;
+  }
+
+  static Future<Map<String, dynamic>?> getAdminAnalytics({int? year, int? month}) async {
+    try {
+      final headers = await _authHeaders();
+      if (!headers.containsKey('Authorization')) return null;
+      String url = kBaseUrl + '/api/admin/analytics?nocache=' + DateTime.now().millisecondsSinceEpoch.toString();
+      if (year != null) url += '&year=$year';
+      if (month != null) url += '&month=$month';
+      final response = await http.get(Uri.parse(url), headers: headers).timeout(const Duration(seconds: 12));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) return data['data'] as Map<String, dynamic>;
+      }
+    } catch (_) {}
+    return null;
   }
 
   static Future<bool> createServiceAdmin(Map<String, dynamic> serviceData) async {
@@ -310,12 +328,12 @@ class ApiService {
   static List<UserBookingModel> getLocalBookings() => [];
 
   static final _fallbackServices = [
-    ServiceModel(id:'1', serviceId:'SRV-001', categoryId:'CAT-01', nameAr:'تنظيف مكيف سبليت', shortDescriptionAr:'تنظيف شامل للوحدة الداخلية والخارجية بمواد متخصصة', basePriceSar:120, priceUnit:'للوحدة', warrantyDays:30, slug:'split-ac-cleaning', isFeatured:true),
-    ServiceModel(id:'2', serviceId:'SRV-002', categoryId:'CAT-02', nameAr:'صيانة وإصلاح مكيفات', shortDescriptionAr:'تشخيص وإصلاح جميع أعطال المكيفات بضمان كامل', basePriceSar:200, priceUnit:'للزيارة', warrantyDays:30, slug:'ac-repair', isFeatured:true),
-    ServiceModel(id:'3', serviceId:'SRV-003', categoryId:'CAT-03', nameAr:'تعبئة فريون', shortDescriptionAr:'إعادة شحن غاز الفريون لتحسين كفاءة التبريد', basePriceSar:150, priceUnit:'للوحدة', warrantyDays:30, slug:'freon-refill', isFeatured:true),
-    ServiceModel(id:'4', serviceId:'SRV-004', categoryId:'CAT-04', nameAr:'لحام نحاس', shortDescriptionAr:'إصلاح التسربات بتقنية اللحام النحاسي الاحترافي', basePriceSar:250, priceUnit:'للتدخل', warrantyDays:30, slug:'copper-welding', isFeatured:false),
-    ServiceModel(id:'5', serviceId:'SRV-005', categoryId:'CAT-05', nameAr:'عقد صيانة دورية', shortDescriptionAr:'عقود صيانة سنوية للحفاظ على كفاءة المكيفات', basePriceSar:1000, priceUnit:'سنوي', warrantyDays:30, slug:'annual-maintenance', isFeatured:false),
-    ServiceModel(id:'6', serviceId:'SRV-006', categoryId:'CAT-01', nameAr:'تنظيف داكت سنترال', shortDescriptionAr:'تنظيف مجاري الهواء للمكيفات المركزية', basePriceSar:500, priceUnit:'للوحدة', warrantyDays:30, slug:'duct-cleaning', isFeatured:true),
+    ServiceModel(id:'1', serviceId:'SRV-001', categoryId:'CAT-01', nameAr:'تنظيف مكيف سبليت', shortDescriptionAr:'تنظيف شامل للوحدة الداخلية والخارجية بمواد متخصصة', basePriceSar:120, priceUnit:'للوحدة', warrantyDays:30, slug:'split-ac-cleaning', isFeatured:true, pricingType:'fixed', isPriceOnVisit:false),
+    ServiceModel(id:'2', serviceId:'SRV-002', categoryId:'CAT-02', nameAr:'صيانة وإصلاح مكيفات', shortDescriptionAr:'تشخيص وإصلاح جميع أعطال المكيفات بضمان كامل', basePriceSar:200, priceUnit:'للزيارة', warrantyDays:30, slug:'ac-repair', isFeatured:true, pricingType:'fixed', isPriceOnVisit:false),
+    ServiceModel(id:'3', serviceId:'SRV-003', categoryId:'CAT-03', nameAr:'تعبئة فريون', shortDescriptionAr:'إعادة شحن غاز الفريون لتحسين كفاءة التبريد', basePriceSar:150, priceUnit:'للوحدة', warrantyDays:30, slug:'freon-refill', isFeatured:true, pricingType:'fixed', isPriceOnVisit:false),
+    ServiceModel(id:'4', serviceId:'SRV-004', categoryId:'CAT-04', nameAr:'لحام نحاس', shortDescriptionAr:'إصلاح التسربات بتقنية اللحام النحاسي الاحترافي', basePriceSar:250, priceUnit:'للتدخل', warrantyDays:30, slug:'copper-welding', isFeatured:false, pricingType:'on_visit', isPriceOnVisit:true),
+    ServiceModel(id:'5', serviceId:'SRV-005', categoryId:'CAT-05', nameAr:'عقد صيانة دورية', shortDescriptionAr:'عقود صيانة سنوية للحفاظ على كفاءة المكيفات', basePriceSar:1000, priceUnit:'سنوي', warrantyDays:30, slug:'annual-maintenance', isFeatured:false, pricingType:'fixed', isPriceOnVisit:false),
+    ServiceModel(id:'6', serviceId:'SRV-006', categoryId:'CAT-01', nameAr:'تنظيف داكت سنترال', shortDescriptionAr:'تنظيف مجاري الهواء للمكيفات المركزية', basePriceSar:500, priceUnit:'للوحدة', warrantyDays:30, slug:'duct-cleaning', isFeatured:true, pricingType:'fixed', isPriceOnVisit:false),
   ];
   static final _fallbackCategories = [
     CategoryModel(id:'1', categoryId:'CAT-01', nameAr:'تنظيف', iconName:'🧹'),

@@ -37,14 +37,25 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase();
     const BookingModel = Booking();
-    const { DailyAvailability } = await import('@/models');
+    const { DailyAvailability, Service } = await import('@/models');
     const DailyAvailabilityModel = DailyAvailability();
+    const ServiceModel = Service();
     const body = await request.json();
 
     // Validate required fields
     if (!body.preferred_date || !body.slot_id || !body.service_id || !body.area_id) {
       return NextResponse.json({ success: false, error: 'Missing required booking fields (date, slot, service, area)' }, { status: 400, headers: corsHeaders });
     }
+    // Load service to determine pricing type
+    let servicePricingType = 'fixed';
+    let serviceIsOnVisit = false;
+    try {
+      const svc = await ServiceModel.findOne({ service_id: body.service_id }).lean() as any;
+      if (svc) {
+        servicePricingType = svc.pricing_type || (svc.is_price_on_visit ? 'on_visit' : 'fixed');
+        serviceIsOnVisit = servicePricingType === 'on_visit' || !!svc.is_price_on_visit;
+      }
+    } catch (_) {}
 
     // Prevent double-booking: check if slot already taken for same date (excluding cancelled)
     const existingBooking = await BookingModel.findOne({
@@ -71,6 +82,8 @@ export async function POST(request: NextRequest) {
     const uniqueSuffix = Date.now().toString().slice(-6);
     const booking_id = `BK-${String(100001 + count).padStart(6, '0')}-${uniqueSuffix}`;
 
+    // Handle pricing: if on_visit, estimated_price is 0 and final will be set on completion
+    const estimated = serviceIsOnVisit ? 0 : Number(body.estimated_price_sar || body.total_amount_sar || 0);
     const booking = new BookingModel({
       ...body,
       customer_name: final_name,
@@ -79,6 +92,10 @@ export async function POST(request: NextRequest) {
       booking_id,
       status_id: 'STAT-01',
       status_code: 'STAT-01',
+      estimated_price_sar: estimated,
+      final_price_sar: null,
+      pricing_type: servicePricingType,
+      is_price_on_visit: serviceIsOnVisit,
       created_at: new Date().toISOString(),
     });
 

@@ -150,7 +150,7 @@ class _BookingScreenState extends State<BookingScreen> {
             'slot_id': _selectedSlotId,
             'quantity': _quantity,
             'notes': _notes,
-            'estimated_price_sar': targetService.basePriceSar * _quantity,
+            'estimated_price_sar': targetService.isPriceOnVisit ? 0 : targetService.basePriceSar * _quantity,
           }),
         ).timeout(const Duration(seconds: 12));
 
@@ -201,7 +201,9 @@ class _BookingScreenState extends State<BookingScreen> {
         quantity: _quantity,
         notes: _notes,
         statusId: 'STAT-01',
-        estimatedPriceSar: targetService.basePriceSar * _quantity,
+        estimatedPriceSar: targetService.isPriceOnVisit ? 0 : targetService.basePriceSar * _quantity,
+        pricingType: targetService.isPriceOnVisit ? 'on_visit' : 'fixed',
+        isPriceOnVisit: targetService.isPriceOnVisit,
         createdAt: DateTime.now().toIso8601String(),
       );
       ApiService.addLocalBooking(newBooking);
@@ -288,7 +290,7 @@ class _BookingScreenState extends State<BookingScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('الخدمة المختارة:', style: GoogleFonts.cairo(fontSize: 12, color: const Color(kColorTextLight))),
-                              Text('${routeService.nameAr} (${routeService.basePriceSar} ريال)', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(kColorPrimary))),
+                              Text(routeService.isPriceOnVisit ? '${routeService.nameAr} (التسعير عند الزيارة)' : '${routeService.nameAr} (${routeService.basePriceSar} ريال)', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(kColorPrimary))),
                             ],
                           ),
                         ),
@@ -312,7 +314,7 @@ class _BookingScreenState extends State<BookingScreen> {
                             items: _availableServices.map((srv) {
                               return DropdownMenuItem<ServiceModel>(
                                 value: srv,
-                                child: Text('${srv.nameAr} - (${srv.basePriceSar} ريال)', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w600)),
+                                child: Text(srv.isPriceOnVisit ? '${srv.nameAr} - (عند الزيارة)' : '${srv.nameAr} - (${srv.basePriceSar} ريال)', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w600)),
                               );
                             }).toList(),
                             onChanged: (srv) {
@@ -478,8 +480,8 @@ class _BookingScreenState extends State<BookingScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('السعر التقديري الفوري:', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-                        Text('${activeService.basePriceSar * _quantity} ريال', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(kColorPrimary))),
+                        Text(activeService.isPriceOnVisit ? 'طريقة التسعير:' : 'السعر التقديري الفوري:', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                        Text(activeService.isPriceOnVisit ? 'عند الزيارة (يحدد بعد المعاينة)' : '${activeService.basePriceSar * _quantity} ريال', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(kColorPrimary))),
                       ],
                     ),
                   ),

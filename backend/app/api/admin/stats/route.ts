@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
     let cancelledCount = 0;
 
     allBookings.forEach((b: any) => {
-      const price = Number(b.estimated_price_sar || b.total_amount_sar || b.total_price_sar || 0);
+      // Use final_price_sar if set (for on_visit completed), else estimated
+      const priceRaw = b.final_price_sar != null && b.final_price_sar !== '' ? b.final_price_sar : (b.estimated_price_sar || b.total_amount_sar || b.total_price_sar || 0);
+      const price = Number(priceRaw) || 0;
+      // Only count revenue for completed bookings if you want, but keep total for now; completed revenue handled in analytics
       totalRevenue += price;
 
       const status = (b.status_id || b.status_code || b.status || '').toUpperCase();

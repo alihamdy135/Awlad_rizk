@@ -42,17 +42,21 @@ export async function POST(request: NextRequest) {
     const service_id = body.service_id || `SRV-${String(101 + count).padStart(3, '0')}`;
     const slug = body.slug || service_id.toLowerCase();
 
+    const pricing_type = body.pricing_type === 'on_visit' || body.is_price_on_visit === true ? 'on_visit' : 'fixed';
+    const is_price_on_visit = pricing_type === 'on_visit';
     const newService = new ServiceModel({
       service_id,
       category_id: body.category_id || 'CAT-01',
       name_ar: body.name_ar,
       short_description_ar: body.short_description_ar || body.name_ar,
-      base_price_sar: Number(body.base_price_sar) || 100,
-      price_unit: body.price_unit || 'للوحدة',
+      base_price_sar: is_price_on_visit ? 0 : (Number(body.base_price_sar) || 100),
+      price_unit: body.price_unit || (is_price_on_visit ? 'عند الزيارة' : 'للوحدة'),
       warranty_days: Number(body.warranty_days) || 30,
       slug,
       is_featured: body.is_featured ?? true,
       display_order: count + 1,
+      pricing_type,
+      is_price_on_visit,
     });
 
     await newService.save();
@@ -76,10 +80,20 @@ export async function PUT(request: NextRequest) {
     if (!service_id) {
       return NextResponse.json({ success: false, error: 'service_id is required' }, { status: 400, headers: corsHeaders });
     }
+    // Normalize pricing_type handling on update
+    if (updateData.pricing_type || updateData.is_price_on_visit !== undefined) {
+      const pt = updateData.pricing_type === 'on_visit' || updateData.is_price_on_visit === true ? 'on_visit' : 'fixed';
+      updateData.pricing_type = pt;
+      updateData.is_price_on_visit = pt === 'on_visit';
+      if (pt === 'on_visit') {
+        updateData.base_price_sar = 0;
+        updateData.price_unit = updateData.price_unit || 'عند الزيارة';
+      }
+    }
 
     const updated = await ServiceModel.findOneAndUpdate(
       { service_id },
-      { ...updateData },
+      { $set: updateData },
       { new: true, upsert: true }
     ).lean();
 

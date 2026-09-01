@@ -20,10 +20,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
   List<ServiceModel> _services = [];
   String _selectedFilter = 'ALL';
 
+  // Analytics state
+  Map<String, dynamic>? _analytics;
+  int _analyticsYear = DateTime.now().year;
+  int _analyticsMonth = DateTime.now().month;
+  bool _isLoadingAnalytics = false;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _loadAdminData();
   }
 
@@ -32,15 +38,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     final stats = await ApiService.getAdminStats();
     final bookings = await ApiService.getAllBookingsAdmin();
     final services = await ApiService.getServices();
+    final analytics = await ApiService.getAdminAnalytics(year: _analyticsYear, month: _analyticsMonth);
 
     if (mounted) {
       setState(() {
         _stats = stats;
         _allBookings = bookings;
         _services = services;
+        _analytics = analytics;
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _loadAnalytics() async {
+    setState(() => _isLoadingAnalytics = true);
+    final analytics = await ApiService.getAdminAnalytics(year: _analyticsYear, month: _analyticsMonth);
+    if (mounted) setState(() { _analytics = analytics; _isLoadingAnalytics = false; });
   }
 
   @override
@@ -101,11 +115,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
             indicatorColor: const Color(kColorPrimary),
             labelColor: const Color(kColorPrimary),
             unselectedLabelColor: Colors.grey,
-            labelStyle: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
+            labelStyle: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12),
+            isScrollable: true,
             tabs: const [
               Tab(icon: Icon(Icons.analytics_outlined), text: 'الإحصائيات'),
               Tab(icon: Icon(Icons.assignment_outlined), text: 'طلبات العملاء'),
               Tab(icon: Icon(Icons.build_circle_outlined), text: 'إدارة الخدمات'),
+              Tab(icon: Icon(Icons.bar_chart), text: 'التحليل'),
             ],
           ),
         ),
@@ -117,6 +133,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                   _buildStatsTab(),
                   _buildBookingsTab(),
                   _buildServicesTab(),
+                  _buildAnalyticsTab(),
                 ],
               ),
       ),
@@ -137,7 +154,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Card
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             decoration: BoxDecoration(
@@ -206,7 +222,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
           Text('ملخص الأداء والمبيعات', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(kColorSecondary))),
           const SizedBox(height: 12),
 
-          // Grid of Stat Cards
           GridView.count(
             crossAxisCount: 2,
             crossAxisSpacing: 12,
@@ -304,7 +319,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
   Widget _buildBookingsTab() {
     return Column(
       children: [
-        // Filter Chips
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -318,8 +332,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
             ],
           ),
         ),
-
-        // List
         Expanded(
           child: _filteredBookings.isEmpty
               ? Center(child: Text('لا توجد طلبات في هذا القسم حالياً', style: GoogleFonts.cairo(color: Colors.grey)))
@@ -359,6 +371,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     return found.nameAr.isNotEmpty ? found.nameAr : (serviceId.isNotEmpty ? serviceId : 'خدمة تكييف وتبريد');
   }
 
+  ServiceModel? _getServiceById(String serviceId) {
+    try {
+      return _services.firstWhere((s) => s.serviceId == serviceId || s.id == serviceId);
+    } catch (_) { return null; }
+  }
+
   String _getAreaName(String areaId) {
     final found = kServiceAreas.firstWhere(
       (a) => a['id'] == areaId,
@@ -379,6 +397,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     final serviceName = _getServiceName(booking.serviceId);
     final areaName = _getAreaName(booking.areaId);
     final slotName = _getSlotName(booking.slotId);
+    final svc = _getServiceById(booking.serviceId);
+    final isOnVisit = booking.isOnVisitPricing || (svc?.isPriceOnVisit ?? false);
+    final showFinal = booking.finalPriceSar != null && booking.finalPriceSar! > 0;
+    final priceText = isOnVisit
+        ? (showFinal ? '${booking.finalPriceSar!.toStringAsFixed(0)} ريال (بعد المعاينة)' : 'التسعير عند الزيارة - لم يحدد بعد')
+        : '${booking.totalAmountSar.toStringAsFixed(0)} ريال';
+    final priceColor = isOnVisit && !showFinal ? Colors.orange[700] : Colors.green[700];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
@@ -421,6 +446,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                 const SizedBox(width: 6),
                 Text('الخدمة المطلوبة: ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
                 Expanded(child: Text(serviceName, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: const Color(kColorPrimary)))),
+                if (isOnVisit) Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.15), borderRadius: BorderRadius.circular(6)), child: Text('عند الزيارة', style: GoogleFonts.cairo(fontSize: 10, color: Colors.orange[800], fontWeight: FontWeight.bold))),
               ],
             ),
             const SizedBox(height: 4),
@@ -460,7 +486,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                 Text('الكمية: ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
                 Text('${booking.quantity} مكيف', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14)),
                 const Spacer(),
-                Text('${booking.totalAmountSar} ريال', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green[700])),
+                Flexible(child: Text(priceText, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13, color: priceColor), textAlign: TextAlign.end)),
               ],
             ),
             if (booking.notes.isNotEmpty) ...[
@@ -514,6 +540,77 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
   }
 
   void _showChangeStatusDialog(UserBookingModel booking) {
+    final svc = _getServiceById(booking.serviceId);
+    final isOnVisit = booking.isOnVisitPricing || (svc?.isPriceOnVisit ?? false);
+    final isCompletedAlready = booking.statusCode.toUpperCase() == 'STAT-03';
+
+    // If completing an on_visit booking, we need price input
+    if (isOnVisit && !isCompletedAlready) {
+      final priceCtrl = TextEditingController(text: booking.finalPriceSar?.toStringAsFixed(0) ?? '');
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('تغيير حالة الطلب (${booking.bookingId})', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 15)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Text('هذه الخدمة بنظام "التسعير عند الزيارة". عند تغيير الحالة إلى مكتمل يجب إدخال السعر النهائي ليتم احتسابه في الأرباح.', style: GoogleFonts.cairo(fontSize: 12, color: Colors.brown[800]))),
+                const SizedBox(height: 12),
+                ListTile(
+                  title: Text('🟡 قيد الانتظار', style: GoogleFonts.cairo()),
+                  onTap: () { Navigator.pop(ctx); _updateBookingStatus(booking.bookingId, 'STAT-01'); },
+                ),
+                ListTile(
+                  title: Text('🔵 جاري العمل', style: GoogleFonts.cairo()),
+                  onTap: () { Navigator.pop(ctx); _updateBookingStatus(booking.bookingId, 'STAT-02'); },
+                ),
+                const Divider(),
+                Text('إكمال الطلب مع تحديد السعر:', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(kColorPrimary))),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: priceCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'السعر النهائي بالريال *',
+                    prefixIcon: const Icon(Icons.attach_money, color: Color(kColorPrimary)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.check_circle, size: 18),
+                    label: Text('تأكيد الإكمال بالسعر', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                    onPressed: () {
+                      final p = double.tryParse(priceCtrl.text.trim());
+                      if (p == null || p <= 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('أدخل سعراً صحيحاً أكبر من صفر', style: GoogleFonts.cairo()), backgroundColor: Colors.red));
+                        return;
+                      }
+                      Navigator.pop(ctx);
+                      _updateBookingStatus(booking.bookingId, 'STAT-03', finalPrice: p);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  title: Text('🔴 ملغي', style: GoogleFonts.cairo()),
+                  onTap: () { Navigator.pop(ctx); _updateBookingStatus(booking.bookingId, 'STAT-04'); },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -544,13 +641,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     );
   }
 
-  Future<void> _updateBookingStatus(String bookingId, String newStatus) async {
-    Navigator.pop(context);
+  Future<void> _updateBookingStatus(String bookingId, String newStatus, {double? finalPrice}) async {
+    // close dialog if still open
+    if (Navigator.canPop(context)) {
+      try { Navigator.pop(context); } catch (_) {}
+    }
     setState(() => _isLoading = true);
-    final success = await ApiService.updateBookingStatusAdmin(bookingId, newStatus);
+    final success = await ApiService.updateBookingStatusAdmin(bookingId, newStatus, finalPriceSar: finalPrice);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(success ? 'تم تحديث حالة الطلب بنجاح!' : 'فشل تحديث الحالة'), backgroundColor: success ? Colors.green : Colors.red),
+        SnackBar(content: Text(success ? 'تم تحديث حالة الطلب بنجاح!' : 'فشل تحديث الحالة - تأكد من إدخال السعر للطلبات عند الزيارة'), backgroundColor: success ? Colors.green : Colors.red),
       );
       _loadAdminData();
     }
@@ -583,7 +683,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 child: ListTile(
                   title: Text(service.nameAr, style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-                  subtitle: Text('${service.basePriceSar} ريال / ${service.priceUnit} (ضمان ${service.warrantyDays} يوم)', style: GoogleFonts.cairo(fontSize: 12)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(service.isPriceOnVisit ? 'التسعير عند الزيارة / ${service.priceUnit} (ضمان ${service.warrantyDays} يوم)' : '${service.basePriceSar.toStringAsFixed(0)} ريال / ${service.priceUnit} (ضمان ${service.warrantyDays} يوم)', style: GoogleFonts.cairo(fontSize: 12)),
+                      if (service.isPriceOnVisit) Padding(padding: const EdgeInsets.only(top: 2), child: Text('⚠️ يحدد السعر عند الإكمال', style: GoogleFonts.cairo(fontSize: 10, color: Colors.orange[700], fontWeight: FontWeight.bold))),
+                    ],
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -602,58 +708,86 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
 
   void _showAddOrEditServiceDialog({ServiceModel? service}) {
     final nameCtrl = TextEditingController(text: service?.nameAr ?? '');
-    final priceCtrl = TextEditingController(text: service != null ? service.basePriceSar.toString() : '120');
+    final priceCtrl = TextEditingController(text: service != null && !service.isPriceOnVisit ? service.basePriceSar.toStringAsFixed(0) : '120');
     final descCtrl = TextEditingController(text: service?.shortDescriptionAr ?? '');
     final warrantyCtrl = TextEditingController(text: service != null ? service.warrantyDays.toString() : '30');
+    bool isOnVisit = service?.isPriceOnVisit ?? false;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(service == null ? 'إضافة خدمة جديدة' : 'تعديل الخدمة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'اسم الخدمة بالعربية')),
-              const SizedBox(height: 8),
-              TextField(controller: priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'السعر بالريال السعودي')),
-              const SizedBox(height: 8),
-              TextField(controller: warrantyCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'مدة الضمان بالأيام (مثلاً 30)')),
-              const SizedBox(height: 8),
-              TextField(controller: descCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف الخدمة')),
-            ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setS) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(service == null ? 'إضافة خدمة جديدة' : 'تعديل الخدمة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'اسم الخدمة بالعربية')),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  title: Text('التسعير عند الزيارة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
+                  subtitle: Text(isOnVisit ? 'السعر يحدد بعد المعاينة عند الإكمال' : 'سعر ثابت يظهر للعميل', style: GoogleFonts.cairo(fontSize: 11, color: Colors.grey[600])),
+                  value: isOnVisit,
+                  activeColor: const Color(kColorPrimary),
+                  onChanged: (v) => setS(() => isOnVisit = v),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                if (!isOnVisit) ...[
+                  const SizedBox(height: 8),
+                  TextField(controller: priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'السعر بالريال السعودي')),
+                ] else ...[
+                  const SizedBox(height: 4),
+                  Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Row(children: [const Icon(Icons.info_outline, size: 16, color: Colors.orange), const SizedBox(width: 6), Expanded(child: Text('سيظهر للعميل "عند الزيارة" وسيطلب منك إدخال السعر عند تغيير الحالة لمكتمل', style: GoogleFonts.cairo(fontSize: 11, color: Colors.brown[700])))])),
+                ],
+                const SizedBox(height: 8),
+                TextField(controller: warrantyCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'مدة الضمان بالأيام (مثلاً 30)')),
+                const SizedBox(height: 8),
+                TextField(controller: descCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف الخدمة')),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text('إلغاء', style: GoogleFonts.cairo())),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameCtrl.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('أدخل اسم الخدمة', style: GoogleFonts.cairo()), backgroundColor: Colors.red));
+                  return;
+                }
+                if (!isOnVisit && (double.tryParse(priceCtrl.text) == null || double.parse(priceCtrl.text) <= 0)) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('أدخل سعراً صحيحاً', style: GoogleFonts.cairo()), backgroundColor: Colors.red));
+                  return;
+                }
+                Navigator.pop(ctx);
+                final data = {
+                  if (service != null) 'service_id': service.serviceId,
+                  'name_ar': nameCtrl.text.trim(),
+                  'base_price_sar': isOnVisit ? 0 : double.tryParse(priceCtrl.text) ?? 100,
+                  'short_description_ar': descCtrl.text.trim(),
+                  'warranty_days': int.tryParse(warrantyCtrl.text) ?? 30,
+                  'pricing_type': isOnVisit ? 'on_visit' : 'fixed',
+                  'is_price_on_visit': isOnVisit,
+                  'price_unit': isOnVisit ? 'عند الزيارة' : 'للوحدة',
+                };
+                setState(() => _isLoading = true);
+                bool success = false;
+                if (service == null) {
+                  success = await ApiService.createServiceAdmin(data);
+                } else {
+                  success = await ApiService.updateServiceAdmin(data);
+                }
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(success ? 'تمت العملية بنجاح!' : 'فشل العملية', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)), backgroundColor: success ? Colors.green : Colors.red),
+                  );
+                  _loadAdminData();
+                }
+              },
+              child: Text('حفظ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('إلغاء', style: GoogleFonts.cairo())),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final data = {
-                if (service != null) 'service_id': service.serviceId,
-                'name_ar': nameCtrl.text.trim(),
-                'base_price_sar': double.tryParse(priceCtrl.text) ?? 100,
-                'short_description_ar': descCtrl.text.trim(),
-                'warranty_days': int.tryParse(warrantyCtrl.text) ?? 30,
-              };
-              setState(() => _isLoading = true);
-              bool success = false;
-              if (service == null) {
-                success = await ApiService.createServiceAdmin(data);
-              } else {
-                success = await ApiService.updateServiceAdmin(data);
-              }
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('تمت العملية بنجاح!', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
-                );
-                _loadAdminData();
-              }
-            },
-            child: Text('حفظ', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-          ),
-        ],
       ),
     );
   }
@@ -684,5 +818,176 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
         ],
       ),
     );
+  }
+
+  // ─── Tab 4: Analytics ────────────────────────────────────────────
+  Widget _buildAnalyticsTab() {
+    if (_analytics == null) {
+      return Center(child: _isLoadingAnalytics ? const CircularProgressIndicator(color: Color(kColorPrimary)) : Text('لا توجد بيانات تحليل بعد', style: GoogleFonts.cairo(color: Colors.grey)));
+    }
+    final monthly = (_analytics!['monthly'] as List?) ?? [];
+    final selected = _analytics!['selected'] as Map<String, dynamic>? ?? {};
+    final yearData = _analytics!['year'] as Map<String, dynamic>? ?? {};
+    final allYears = (_analytics!['all_years'] as List?) ?? [];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Year/Month selectors
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  value: _analyticsYear,
+                  decoration: InputDecoration(labelText: 'السنة', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), filled: true, fillColor: Colors.white, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+                  items: (allYears.isEmpty ? [DateTime.now().year, DateTime.now().year - 1, DateTime.now().year - 2] : allYears.map<int>((e) => (e['year'] as num).toInt()).toList()).map((y) => DropdownMenuItem(value: y, child: Text('$y', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)))).toList(),
+                  onChanged: (v) { if (v != null) setState(() => _analyticsYear = v); _loadAnalytics(); },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  value: _analyticsMonth,
+                  decoration: InputDecoration(labelText: 'الشهر', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), filled: true, fillColor: Colors.white, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+                  items: List.generate(12, (i) => i + 1).map((m) => DropdownMenuItem(value: m, child: Text(['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][m-1], style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold)))).toList(),
+                  onChanged: (v) { if (v != null) setState(() => _analyticsMonth = v); _loadAnalytics(); },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_isLoadingAnalytics) const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: Color(kColorPrimary))))
+          else ...[
+            // Selected month summary
+            Text('تحليل ${selected['key'] ?? '$_analyticsYear-$_analyticsMonth'}', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(kColorSecondary))),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.45,
+              children: [
+                _buildAnalyticsCard('طلبات الشهر', '${selected['count'] ?? 0}', 'عدد', _growthBadge(selected['growth_count_percent'])),
+                _buildAnalyticsCard('إيراد الشهر (مكتمل)', '${(selected['revenue'] ?? 0).toStringAsFixed(0)} ريال', 'ريال', _growthBadge(selected['growth_revenue_percent'])),
+                _buildAnalyticsCard('مقارنة سنوية (نفس الشهر)', 'العدد: ${_growthBadge(selected['yoy_count_percent'])}', 'سنة', Text('${selected['yoy_revenue_percent'] ?? 0}% إيراد', style: GoogleFonts.cairo(fontSize: 10, color: _growthColor(selected['yoy_revenue_percent'])))),
+                _buildAnalyticsCard('إجمالي السنة $yearData', '${yearData['count'] ?? 0} طلب', '${yearData['revenue']?.toStringAsFixed(0) ?? 0} ريال', _growthBadge(yearData['growth_revenue_percent'])),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text('نسبة النمو = (الحالي - السابق) / السابق ×100 مقارنة بالشهر السابق', style: GoogleFonts.cairo(fontSize: 11, color: Colors.grey[600])),
+            const SizedBox(height: 20),
+            // Monthly table
+            Text('تفاصيل الأشهر ($yearData)', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(kColorSecondary))),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.withOpacity(0.15))),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(const Color(kColorBg)),
+                  columns: [
+                    DataColumn(label: Text('الشهر', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12))),
+                    DataColumn(label: Text('الطلبات', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12))),
+                    DataColumn(label: Text('الإيراد', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12))),
+                    DataColumn(label: Text('نمو العدد', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12))),
+                    DataColumn(label: Text('نمو الإيراد', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12))),
+                  ],
+                  rows: monthly.map<DataRow>((m) {
+                    final isSelected = m['month'] == _analyticsMonth;
+                    return DataRow(
+                      color: isSelected ? WidgetStateProperty.all(const Color(kColorPrimary).withOpacity(0.07)) : null,
+                      cells: [
+                        DataCell(Text(m['month_name_ar'], style: GoogleFonts.cairo(fontWeight: isSelected ? FontWeight.bold : FontWeight.w600, fontSize: 12, color: isSelected ? const Color(kColorPrimary) : Colors.black87))),
+                        DataCell(Text('${m['count']}', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold))),
+                        DataCell(Text('${(m['revenue'] as num).toStringAsFixed(0)}', style: GoogleFonts.cairo(fontSize: 12))),
+                        DataCell(_growthBadge(m['growth_count_percent'])),
+                        DataCell(_growthBadge(m['growth_revenue_percent'])),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Simple bar visualization using containers
+            Text('رسم مبسط للإيراد الشهري', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(kColorSecondary))),
+            const SizedBox(height: 12),
+            ...monthly.map((m) {
+              final maxRev = monthly.map((e) => (e['revenue'] as num).toDouble()).fold<double>(0, (a, b) => b > a ? b : a);
+              final rev = (m['revenue'] as num).toDouble();
+              final pct = maxRev == 0 ? 0.0 : (rev / maxRev);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    SizedBox(width: 60, child: Text(m['month_name_ar'], style: GoogleFonts.cairo(fontSize: 11))),
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Container(height: 18, decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8))),
+                          FractionallySizedBox(
+                            widthFactor: pct.clamp(0, 1),
+                            child: Container(height: 18, decoration: BoxDecoration(color: m['month'] == _analyticsMonth ? const Color(kColorPrimary) : const Color(kColorAccent), borderRadius: BorderRadius.circular(8))),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('${rev.toStringAsFixed(0)}', style: GoogleFonts.cairo(fontSize: 10, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              );
+            }),
+            const SizedBox(height: 24),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsCard(String title, String value, String unit, Widget badge) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.withOpacity(0.15)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: GoogleFonts.cairo(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Text(value, style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(kColorSecondary))),
+          Text(unit, style: GoogleFonts.cairo(fontSize: 11, color: Colors.grey[500])),
+          const Spacer(),
+          badge,
+        ],
+      ),
+    );
+  }
+
+  Widget _growthBadge(dynamic percent) {
+    final p = (percent is num ? percent.toDouble() : 0.0);
+    final isPositive = p >= 0;
+    final color = isPositive ? Colors.green : Colors.red;
+    final icon = isPositive ? Icons.trending_up : Icons.trending_down;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(20), border: Border.all(color: color.withOpacity(0.3))),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text('${p > 0 ? '+' : ''}${p.toStringAsFixed(1)}%', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+        ],
+      ),
+    );
+  }
+
+  Color _growthColor(dynamic percent) {
+    final p = (percent is num ? percent.toDouble() : 0.0);
+    return p >= 0 ? Colors.green : Colors.red;
   }
 }

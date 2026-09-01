@@ -10,6 +10,8 @@ class ServiceModel {
   final String? imageUrl;
   final String slug;
   final bool isFeatured;
+  final String pricingType; // 'fixed' | 'on_visit'
+  final bool isPriceOnVisit;
 
   ServiceModel({
     required this.id,
@@ -23,9 +25,13 @@ class ServiceModel {
     this.imageUrl,
     required this.slug,
     required this.isFeatured,
+    this.pricingType = 'fixed',
+    this.isPriceOnVisit = false,
   });
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
+    final rawType = (json['pricing_type'] ?? (json['is_price_on_visit'] == true ? 'on_visit' : 'fixed')).toString();
+    final isOnVisit = rawType == 'on_visit' || json['is_price_on_visit'] == true;
     return ServiceModel(
       id: json['_id'] ?? '',
       serviceId: json['service_id'] ?? '',
@@ -33,13 +39,17 @@ class ServiceModel {
       nameAr: json['name_ar'] ?? '',
       shortDescriptionAr: json['short_description_ar'] ?? '',
       basePriceSar: (json['base_price_sar'] ?? 0).toDouble(),
-      priceUnit: json['price_unit'] ?? '',
+      priceUnit: json['price_unit'] ?? (isOnVisit ? 'عند الزيارة' : ''),
       warrantyDays: json['warranty_days'] ?? 0,
       imageUrl: json['image_url'],
       slug: json['slug'] ?? '',
       isFeatured: json['is_featured'] ?? false,
+      pricingType: isOnVisit ? 'on_visit' : 'fixed',
+      isPriceOnVisit: isOnVisit,
     );
   }
+
+  String get displayPrice => isPriceOnVisit ? 'التسعير عند الزيارة' : '$basePriceSar ريال';
 }
 
 class CategoryModel {

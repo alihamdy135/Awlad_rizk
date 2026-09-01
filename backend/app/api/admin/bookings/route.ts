@@ -52,16 +52,38 @@ export async function PUT(request: NextRequest) {
     const BookingModel = Booking();
 
     const body = await request.json();
-    const { booking_id, status_code, status_id } = body;
+    const { booking_id, status_code, status_id, final_price_sar } = body;
     const targetStatus = status_code || status_id;
 
     if (!booking_id || !targetStatus) {
       return NextResponse.json({ success: false, error: 'booking_id and status_code are required' }, { status: 400, headers: corsHeaders });
     }
 
+    const existing = await BookingModel.findOne({ booking_id }).lean() as any;
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404, headers: corsHeaders });
+    }
+
+    // If completing an on_visit booking, require final_price
+    const isOnVisit = existing.is_price_on_visit || existing.pricing_type === 'on_visit';
+    const isCompleting = targetStatus === 'STAT-03' || String(targetStatus).toUpperCase().includes('COMPLETED');
+    let updateFields: any = { status_code: targetStatus, status_id: targetStatus, status: targetStatus };
+    if (isOnVisit && isCompleting) {
+      const finalPrice = Number(final_price_sar);
+      if (!finalPrice || isNaN(finalPrice) || finalPrice <= 0) {
+        return NextResponse.json({ success: false, error: 'يجب إدخال السعر النهائي للخدمة (التسعير عند الزيارة) عند الإكمال' }, { status: 400, headers: corsHeaders });
+      }
+      updateFields.final_price_sar = finalPrice;
+      // Also keep estimated synced for backward compat
+      updateFields.estimated_price_sar = finalPrice;
+    } else if (final_price_sar !== undefined && final_price_sar !== null && final_price_sar !== '') {
+      const fp = Number(final_price_sar);
+      if (!isNaN(fp) && fp >= 0) updateFields.final_price_sar = fp;
+    }
+
     const updated = await BookingModel.findOneAndUpdate(
       { booking_id },
-      { $set: { status_code: targetStatus, status_id: targetStatus, status: targetStatus } },
+      { $set: updateFields },
       { new: true }
     ).lean();
 

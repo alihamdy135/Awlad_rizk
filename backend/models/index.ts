@@ -36,6 +36,8 @@ export interface IService extends Document {
   is_active: boolean;
   is_featured: boolean;
   display_order: number;
+  pricing_type: string; // 'fixed' | 'on_visit'
+  is_price_on_visit: boolean;
 }
 const ServiceSchema = new Schema<IService>({
   service_id: { type: String, required: true, unique: true },
@@ -54,6 +56,8 @@ const ServiceSchema = new Schema<IService>({
   is_active: { type: Boolean, default: true },
   is_featured: { type: Boolean, default: false },
   display_order: Number,
+  pricing_type: { type: String, enum: ['fixed', 'on_visit'], default: 'fixed' },
+  is_price_on_visit: { type: Boolean, default: false },
 }, { collection: 'services', timestamps: true });
 
 // ─── Testimonial ────────────────────────────────────────────
@@ -174,6 +178,9 @@ export interface IBooking extends Document {
   notes: string;
   status_id: string;
   estimated_price_sar: number;
+  final_price_sar?: number;
+  pricing_type?: string; // snapshot from service at booking time: 'fixed'|'on_visit'
+  is_price_on_visit?: boolean;
   rating?: number;
   review_text?: string;
   created_at: string;
@@ -193,6 +200,9 @@ const BookingSchema = new Schema<IBooking>({
   notes: String,
   status_id: { type: String, default: 'STAT-01' },
   estimated_price_sar: Number,
+  final_price_sar: { type: Number, default: null },
+  pricing_type: { type: String, enum: ['fixed', 'on_visit'], default: 'fixed' },
+  is_price_on_visit: { type: Boolean, default: false },
   rating: Number,
   review_text: String,
   created_at: { type: String, default: () => new Date().toISOString() },

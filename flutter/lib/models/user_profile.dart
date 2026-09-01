@@ -52,6 +52,9 @@ class UserBookingModel {
   final String notes;
   final String statusId;
   final double estimatedPriceSar;
+  final double? finalPriceSar;
+  final String pricingType; // 'fixed' | 'on_visit'
+  final bool isPriceOnVisit;
   final int? rating;
   final String? reviewText;
   final String createdAt;
@@ -70,16 +73,27 @@ class UserBookingModel {
     required this.notes,
     required this.statusId,
     required this.estimatedPriceSar,
+    this.finalPriceSar,
+    this.pricingType = 'fixed',
+    this.isPriceOnVisit = false,
     this.rating,
     this.reviewText,
     required this.createdAt,
   });
 
   String get statusCode => statusId;
-  double get totalAmountSar => estimatedPriceSar;
+  double get totalAmountSar => finalPriceSar != null && finalPriceSar! > 0 ? finalPriceSar! : estimatedPriceSar;
+  bool get isOnVisitPricing => isPriceOnVisit || pricingType == 'on_visit';
   List<String> get serviceNames => [serviceId.isNotEmpty ? serviceId : 'خدمات تكييف وتبريد'];
 
   factory UserBookingModel.fromJson(Map<String, dynamic> json) {
+    final rawType = (json['pricing_type'] ?? (json['is_price_on_visit'] == true ? 'on_visit' : 'fixed')).toString();
+    final isOnVisit = rawType == 'on_visit' || json['is_price_on_visit'] == true;
+    double? finalP;
+    if (json['final_price_sar'] != null) {
+      finalP = (json['final_price_sar'] as num).toDouble();
+      if (finalP == 0) finalP = null;
+    }
     return UserBookingModel(
       id: json['_id'] != null ? json['_id'].toString() : (json['booking_id']?.toString() ?? ''),
       bookingId: json['booking_id']?.toString() ?? '',
@@ -98,6 +112,9 @@ class UserBookingModel {
           : (json['total_amount_sar'] != null
               ? (json['total_amount_sar'] as num).toDouble()
               : (json['total_price_sar'] != null ? (json['total_price_sar'] as num).toDouble() : 0.0)),
+      finalPriceSar: finalP,
+      pricingType: isOnVisit ? 'on_visit' : 'fixed',
+      isPriceOnVisit: isOnVisit,
       rating: json['rating'] != null ? (json['rating'] as num).toInt() : null,
       reviewText: json['review_text']?.toString(),
       createdAt: json['created_at']?.toString() ?? json['createdAt']?.toString() ?? '',
